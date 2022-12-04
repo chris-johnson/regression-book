@@ -1,0 +1,36 @@
+
+The intercept of a a simple linear model is the mean of the data, which is assumed to have a constant variance. The slope of a simple linear model simply specifies how the location of this distribution changes as the independent variable increases.
+
+
+alpha: How much Type-I error you're willing to tolerate.
+
+A single AIC is useless and uninterpretable.
+
+The intercept global (overall) intercept is the baseline.
+
+If the coefficient is "large" relative to the standard error, then the predictor has an effect on the response. If the p-value for the coefficient is small, then it differs from 0 statistically and the predictor is statistically significant. There is evidence the coefficient is non-zero.
+
+The mean of the residuals is always 0, thus never provided, but the standard deviation of the residuals is.
+
+Degrees of freedom: number of observations minus the number of parameters.
+
+R^2: goodness of fit
+
+Adjusted R^2: compensates for the number of parameters. Important because adding predictors at worst has no effect but often improves R^2, but doesn't necessarily improve predictive power.
+
+Can use Adjusted R^2 to compare models. <!-- Do the models need to be nested? -->
+
+anova()
+summary()
+effects()
+fitted.values()
+residuals()
+influence.measures() produces a matrix which includes DFBETAS, DFFITS, covariance ratios, Cook's distances, diagonal elements of the hat matrix. Influential elements of the matrix are denoted with an asterisk.
+
+dfbetas()
+dffits()
+covratio()
+cooks.distance()
+
+rstandard()
+rstudent()

@@ -1,0 +1,204 @@
+# Linear mixed effects models
+
+TileStats notes: Mixed effects models
+
+<!-- dependent data points
+
+same individual appears multiple times on independent or predictor variable axis (repeated measures)
+
+-->
+
+Fixed effect example: population mean (fixed because it doesn't vary), usually population parameters
+Random effects: parameters that vary between groups of dependent data points. Example: Measurements on the same individual will have a mean. Each individual will have a unique mean. In other words, each individual has a parameter to be estimated.
+
+person | before diet | after 1 week | after 2 weeks
+-------|-------------|--------------|--------------
+     1 |         102 |           97 |            95
+     2 |          96 |           93 |            87
+     3 |          83 |           79 |            78
+     4 |          79 |           77 |            75
+
+Regular linear regression would estimate the overall intercept of 89.875 (the mean weight before starting the diet). The estimated slope is -3.125 (the average weight change&mdash;in this case loss&mdash;per week).
+
+A hypothesis test of whether the slope is significantly different than zero results in FTR ($p \approx 0.372$). This is in conflict with the data because each individual reduces their weight over time.
+
+A linear mixed effects model does determine the slope is significantly different than 0, i.e. rejects $H_0: b_1 = 0$. One reason the SLR failed as a model is because these four individuals were randomly sampled from the population, and their measurements are far from the fitted values (i.e. large residuals). Additionally, $n = 4$, which is a small sample size.
+
+The aim of the study is to assess whether the diet reduces the weights, and not so much about each individual's weight at the start of the study. So there is variation in body weights between individuals at a given time point, and there is variation between the cases (weight over time for a given individual). The variation in body weights between individuals is irrelevant to the research question; they only want to know if the diet works. To solve this problem, use a LME model. The LME model can estimate the intercept and slope for each individual. The residuals are computed using each individual's model, not a "global" one like SLR.
+
+How to interpret configurations:
+
+Fixed slope, random intercept: All individuals in the population are assumed to have the same slope (i.e. lose weight at a similar rate). The population slope is estimated using the available data (from the four subjects). Each individual has their own intercept to account for their different starting weights (102, 96, 83, 79). A model with random intercepts but fixed slopes would be written as $\text{weight}_i = a_i + b \times \text{weeks}$, where $i$ indexes the subjects. Note: $a_i$, the intercept, differs based on $i$, whereas $b$ (the slope) is fixed.
+
+The intercepts for each individual are computed and interpreted in the following way:
+
+$$
+\begin{aligned}
+a_1 &= 89.875 + 11.2 = 101 \\
+a_2 &= 89.875 + 5.2 = 95 \\
+a_3 &= 89.875 - 6.7 = 83 \\
+a_4 &= 89.875 - 9.7 = 80
+\end{aligned}
+$$
+
+where 89.875 comes from the fixed effects model. $\text{weight} = 89.875 - 3.125 \text{weeks}$.
+
+89.875 is the global intercept (not considering individuals) so each random effect (individual intercept) can be thought of as a deviation from it ($89.875 \pm \text{some number}$): 11.2, 5.2, -6.7, and -9.7 aer random effects.
+
+**Special note**: The mean of the estimated intercepts (101, 95, 83, 80) is equal to the estimated overall intercept (89.875).
+
+$\text{weight}_1 = 101 - 3.125\text{weeks}$
+$\text{weight}_2 = 95 - 3.125\text{weeks}$
+$\text{weight}_1 = 89.875 - 3.125\text{weeks}$ (global)
+$\text{weight}_1 = 83 - 3.125\text{weeks}$
+$\text{weight}_1 = 80 - 3.125\text{weeks}$
+
+These equations allow the "individual regression lines" to be drawn. (The "global" line can be plotted too.)
+
+Each individual's data points have their own line, so residuals are smaller, resulting in lower standard errors, and in turn a smaller p-value.
+
+SSR for SLR: 896.0
+SSR for LME:  11.9
+
+$$
+\begin{aligned}
+weight_1 &= 101 - 3.125 \times \text{weeks} \\
+weight_2 &= 95 - 3.125 \times \text{weeks} \\
+weight &= 89.875 - 3.125 \times \text{weeks} \\
+weight_3 &= 83 - 3.125 \times \text{weeks} \\
+weight_4 &= 80 - 3.125 \times \text{weeks}
+\end{aligned}
+$$
+
+These equations allow the "individual regression lines" to be drawn. (The "global" line can be plotted too.)
+
+Each individual's data points have their own line, so residuals are smaller, resulting in lower standard errors, and in turn a smaller p-value.
+
+SSR for SLR: 896.0
+SSR for LME:  11.9
+
+In other words, the variance around the lines from the LME model is much smaller than the variance of the SLR model.
+
+**Important**: To further clarify "random", the differences (11.2, 5.2, -6.7, -9.7) from the overall intercept can be thought of as a random variable with mean = 0 and variance estimated by the model.
+
+$$\frac{11.2 + 5.2 + (-6.7) + (-9.7)}{4} = 0$$
+
+We assume a random sample of subjects (in our case $n = 4$, but imagine $n \gg 4$) would have weights that follow a Normal distribution (`family = "gaussian"`) though counts would follow a Poisson distribution, etc.
+
+___
+
+How LME model differs from MLR where subject is a factor:
+
+LME: Subjects as a random factor
+MLR: Subjects as a factor
+
+MLR: `weight = b_0 + b_1 \times weeks + b_j \times subject`
+LME: `weight = b_0 + b_1 \times weeks + (1 | subject)`
+
+In MLR, subject is a fixed effect, so this framework would compare these four individuals only (i.e. the subjects are *not* a random sample from the population).
+
+Term      | LM      | LMM
+----------|---------|-------
+Intercept | 101.125 | 89.875
+Weeks     | -3.125  | -3.125
+Subject 1 |         | 11.174
+Subject 2 | -6.0    | 5.215
+Subject 3 | -18.0   | -6.705
+Subject 4 | -21.0   | -9.685
+
+Both models have same slope. In LM, the intercept is the baseline category (in this case, Subject 1). In LMM, the intercept is the *overall intercept*. So in LM, interpretation of the coefficients&mdash;-6.0, -18.0, and -21.0&mdash;is relative to Subject 1.
+
+This weight dataset, paired with the research question, violates the assumption of independence required by MLR. Each individual is measured over time, and those measurements are dependent.
+
+___
+
+LME model vs. repeated measures ANOVA
+
+LME model pros:
+
+* can estimate parameters
+* can work even when data is missing
+* doesn't require the dependent variable to be continuous; works fine with binary outcomes or count data
+* independent variable can be on continuous scale
+  * measurement of each subject doesn't have to occur on a fixed, constant schedule; they can be measured at any time
+
+RM ANOVA cons:
+
+* removes *all* data points for an individual if one or more data points are missing, resulting in a reduced sample size which in turn decreases statistical power
+* dependent variable *must be* continuous
+* the repeated measures must be categorical (all observations across subjects must line up, e.g. everyone has a $t = 1$ measurement, a $t = 2$ measurement, etc.)
+
+Let's consider a different dataset:
+
+Person | Diet | Before | Week 1 | Week 2 | Week 3
+-------|------|--------|--------|--------|-------
+1      |    A |    102 |     97 |     95 |     93
+2      |    A |     96 |     93 |     87 |     85
+3      |    B |     83 |     79 |     78 |     74
+4      |    B |     79 |     77 |     75 |     72
+
+Random intercepts model: `weight ~ weeks + (1 | subjects)`
+
+Term      | Intercept | Slope  | Note
+----------|-----------|--------|--------------
+Overall   | 89.775    | -2.975 | fixed effects
+Subject 1 | 11.391    |        | random effect
+Subject 2 | 4.918     |        | random effect
+Subject 3 | -6.785    |        | random effect
+Subject 4 | 9.524     |        | random effect
+
+Random slopes and intercepts model: `weight ~ weeks + (1 + weeks | subjects)`
+
+Term      | Intercept | Slope
+----------|-----------|--------
+Overall   | 89.775    | -2.975
+Subject 1 | 11.910    | -0.333
+Subject 2 | 5.429     | -0.319
+Subject 3 | -7.160    | 0.249
+Subject 4 | -10.179   | 0.423
+
+R provides $r = -0.88$ which is the correlation for the random slopes and intercepts. Higher initial weights are correlated with more negative slopes (i.e. weight loss).
+
+This checks out with reality as it is easier for fatter people to lose weight than people who are less fat.
+
+Random slopes only: `weight ~ weeks + (0 + weeks | subject)`
+
+Term      | Intercept | Slope
+----------|-----------|--------
+Overall   | 89.775    | -2.975
+Subject 1 |           | 3.816
+Subject 2 |           | 1.382
+Subject 3 |           | -2.212
+Subject 4 |           | -2.986
+
+*Important note*: The fixed-intercept-random-slope model is usually only appropriate for modeling changes. Initially, all observations (e.g. subjects) have a change of 0, so share an intercept. The changes over time would be $t_1 - t_0$, $t_2 - t_1$, etc.
+
+Additional fixed effect: `weight ~ weeks + diet + (1 | subjects)`
+
+Term      | Estimate  | p-value
+----------|-----------|--------
+Intercept | 97.962    | < 0.001
+Diet B    | -16.375   | 0.003
+slope     | -2.975    | < 0.001
+Subject 1 | 3.095     |
+Subject 2 | -3.095    |
+Subject 3 | 1.309     |
+Subject 4 | -1.309    |
+
+Factors become intercepts; non-factors become slopes.
+
+Diet is a factor: A or B.
+Week is not a factor: 0, 1, 2, or 3 (continuous?)
+
+Therefore, "Intercept" is the intercept for Diet A (the reference category, 97.962), whereas Diet B is the delta between Diet B and Diet A (in this case $97.962 \, \text{kg} - 16.372 \, \text{kg} \approx 81 \, \text{kg}$. 
+
+Subject 1&mdash;a Diet A member&mdash;has an intercept that is $97.962 + 3.095$ (the intercept for their subject-specific "line"). To get the intercept for Subject 3 (a Diet B member), start at 97.962, subtract 16.375 to get to Diet B's overall intercept, then add 1.309 to adjust for Subject 3 ($97.962 - 16.375 + 1.309 \approx 82.896$).
+
+The p-value for Diet B subjects ($p = 0.003$) means that Diet B is significantly different than Diet A. Because the estimate for Diet B is -16.375 (or in general, negative), Diet B subjects weigh less than Diet A subjects.
+
+<!-- Question
+
+What does "< 0.001" for the intercept mean? Significantly different from... what?
+
+-->
+

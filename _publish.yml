@@ -1,0 +1,4 @@
+- source: project
+  quarto-pub:
+    - id: d3d02747-d882-47fe-965d-75193e5f35ff
+      url: 'https://quartopub.com/sites/chrisjohnson/regression-with-r'

@@ -1,0 +1,548 @@
+# Poisson regression
+
+Poisson regression is based on the exponential function $y = e^{b_0 + b_1 \times x}$. The exponent of the exponential function is linear, and linear regression requires the RHS to be linear, so a simple log transformation will 
+
+$$
+\begin{aligned}
+y &= e^{b_0 + b_1 \times x} \\
+\ln(y) &= b_0 + b_1 \times x \\
+\end{aligned}
+$$
+
+Poisson regression: Modeling rate data and the offset
+
+Pt. 1 notes are on the whiteboard. Notes adapted from TileStats
+
+Data: Number of births of rabbits in spring, weekly, in a certain area.
+
+General trend: Birth rate is higher in early spring and lower in late spring. Counts for this dataset were observed using a fixed time interval.
+
+Amount of time | Count
+---------------|------
+          0.85 |    90
+          1.10 |    76
+          0.85 |    37
+          1.20 |    27
+          0.95 |    19
+          1.10 |    13
+          0.90 |     9
+
+Note: 0.85 weeks is approximately 142 hours (168 hours in a 7-day week).
+
+Rates are counts per time. In a situation where the time intervals differ, calculate rates.
+
+To use rates in the Poisson regression framework, we model
+
+$$
+\ln\left(\frac{y}{t}\right) = b_0 + b_1 \times \text{time}
+$$
+
+where $y$ is the count and $t$ is the time interval. The Poisson regression framework is expecting counts, so use one of the laws of logarithms:
+
+$\ln\left(\frac{a}{b}\right) = \ln(a) - \ln(b)$
+
+So our model becomes
+
+$$
+\begin{aligned}
+\ln\left(\frac{y}{t}\right) &= b_0 + b_1 \times \text{time} \\
+\ln(y) - \ln(t) &= b_0 + b_1 \times \text{time} \\
+\ln(y) &= b_0 + b_1 \times \text{time} + \ln(t)
+\end{aligned}
+$$
+
+Now the counts are isolated on the LHS. $\ln(t)$ on the RHS is the *offset*. Note: The offset is *not a parameter*, so it doesn't require estimation. It is simply an additive adjustmen tto account for unequal time intervals.
+
+Let's switch to a new example: Cancer cases over a certain time period for a given population.
+
+Age range       | Number of cases
+----------------|----------------
+40&ndash;59     | 30
+60&ndash;79     | 31
+80+             | 29
+
+Subject matter expertise might suggest more cancer cases in the older age groups. In other words, we might expect moer cancer cases in the elderly populations. An explanation for the observed data where the number of cases are similar for each age group (contrary to SME expectations) might be population.
+
+There are more individuals in the 40&ndash;59 population, so more opportunities for cancer to occur, and in turn, more opportunities for cancer to be observed.
+
+To adjust, we compute *cases per population* (i.e. compute a rate).
+
+A model for this dataset would be
+
+$$
+\ln(y) = b_0 + b_1 \times \text{Age}_{\text{60-79}} + b_2 \times \text{Age}_{\text{80+}} + \ln(n)
+$$
+
+where $y$ is the number of cases, $n$ is the population size. This model uses the age group 45&ndash;59 as the reference level. In this example, $n = (\text{pop}_{\text{40-59}}, \, \text{pop}_{\text{60-79}}, \, \text{pop}_{\text{80+}})$.
+
+**Important:** We can't model rates directly because the information about the number of counts and population size is lost in the process of computing rates. We must model the counts, and if the unit (time, area, population) isn't equal for each group, we must include an offset.
+
+___
+
+Notes about the explanatory variables on a categorical scale require discussion as well.
+
+Dataset: Lymph nodes. The human body has approximately 500 lymph nodes. The number of metastatic lymph nodes is a prognostic factor because it is associated with the progression of cancer. Let A and B be cancer treatments. 8 patients, four per treatment group.
+
+Counts A | Counts B
+---------|---------
+7        | 3
+4        | 1
+4        | 1
+2        | 0
+
+or in long form
+
+Treatment | ID | Count
+----------|----|------
+A         | 1  | 7
+A         | 2  | 4
+A         | 3  | 4
+A         | 4  | 2
+B         | 5  | 3
+B         | 6  | 1
+B         | 7  | 1
+B         | 8  | 0
+
+When a variable is a factor, it must be recoded. Let Treatment A be our baseline. Then the model becomes
+
+$$\ln(y) = b_0 + b_1 \times \text{Treatment}_\text{B}$$
+
+where $\text{Treatment}_\text{B}$ can be 0 (for no) or 1 (for yes). When $\text{Treatment}_\text{B} = 0$, the model returns the expected counts for $\text{Treatment}_\text{A}$. When $\text{Treatment}_\text{B} = 1$, the model returns the expected counts for $\text{Treatment}_\text{B}$.
+
+Treatment A:
+
+$$
+\begin{aligned}
+\ln(y) &= b_0 + b_1 \times 0 \\
+&= b_0
+\end{aligned}
+$$
+
+Treatment B:
+
+$$
+\begin{aligned}
+\ln(y) &= b_0 + b_1 \times 1 \\
+&= b_0 + b_1
+\end{aligned}
+$$
+
+So the expected log-counts for Treatment A is just the intercept, $ln(y) = b_0$, and the expected log-counts for Treatment B is $ln(y) = b_0 + b_1$.
+
+Let's assume R returns the following:
+
+parameter | estimate
+----------|---------
+$b_0$     | 1.447
+$b_1$     | -1.224
+
+$\ln(y) = 1.447 - 1.224 \times \text{Treatment}_{\text{B}}$.
+
+Let $\text{Treatment}_{\text{B}} = 0$ so we can interpret $b_0$. $\ln(y) = 1.447$ is interpreted as "the log-count for Treatment A is 1.447".
+
+$e^{\ln(y)} = e^{1.447}$ becomes $y = e^{1.447} = 4.25$, which is interpreted as "the expected count of metastatic lymph nodes for patients in Treatment A is 4.25".
+
+Let $\text{Treatment}_{\text{B}} = 1$ so we can interpret $b_1 = -1.224$.
+
+$ln(y) = 1.447 - 1.224 = 0.223$. The expected log-count of MLNs for Treatment B patients i 0.223.
+
+$y = e^{0.223}= 1.25$. The expected count of MLNs for Treatment B patients is 1.25.
+
+**Imporant:** The *incident rate ratio* (IRR) is $e^{b_1} = e^{-1.224} = 0.294$ (the multiplicative factor). For this scenario, the expected count for Treatment A multiplied by the IRR returns the expected count for Treatment B: $4.25 \times 0.294 = 1.25$.
+
+On average, there are 70.6% ($1 - \text{IRR} = 1 - 0.294 = 0.706$) fewer metastatic lymph nodes for patients on Treatment B than those on Treatment A.
+
+The reason we don't just compute the means directly is because the regression output provides additional information, specifically if $b_1$ is significantly different than 0, and if so, tha there is an effect, or in other words, Treatment B has an effect. In this case, Treatment B reduces the number of metastatic lymph nodes more than Treatment A:
+
+parameter | estimate | p-value
+----------|----------|--------
+$b_0$     | 1.447    | < 0.001
+$b_1$     | -1.224   | 0.016
+
+To plot, do the following:
+
+$y = e^{b_0 + b_1 \times \text{Treatment}_\text{B}}$
+
+Plug in $\text{Treatment}_\text{B} = 0$ to get Treatment A. $Plug in \text{Treatment}_\text{B} = 1$ to get Treatment B.
+
+**Extremely important:** Do not use an unmatched t-test for count data! Counts are Poisson-distributed, and a t-test assumes data are normally distributed. Instead, use Poisson regression to detect differences between groups!
+
+Recall: Poisson regression assumes independence, fixed unit (time, space, etc.), and that the mean = variance. If these aren't met, Poisson regression is not appropriate.
+
+Since Poisson regression returns the expected log-counts, and the expected counts can be derived, we can check the assumption mean = variance by computing the variance from the observed data:
+
+The expected count for Treatment A is $\bar{A} \approx 4.25$; the expected count for Treatment B is $\bar{B} \approx 1.25$
+
+$\mathrm{Var}(A) = s^2_A = 4.25 \approx \bar{A}$
+
+$\mathrm{Var}(B) = s^2_B = 1.58 \neq \bar{B}$
+
+The variance of B is not approximately equal to the mean of B, but it is possible this is due to sampling variability. The rule of thumb is that as long as the variance is not $2\times$ the mean, they can be considered approximately equal.
+
+**Important:** If the rule of thumb suggests the mean and variance are unequal, use Negative Binomial regression instead.
+
+___
+
+Comparing models with likelihood ratio tests (LRT) and Akaike's Information Criterion (AIC)
+
+Continuing with the dataset about metastatic lymph nodes. Two treatments, A and B. Four patients per treatment. Each observed for number of metastatic lymph nodes.
+
+The model: $\ln(y) = b_0 + b_1 \times \text{Treatment}_{\text{B}}$
+
+Treatment A: $\text{Treatment}_{\text{B}} = 0$
+
+Treatment B: $\text{Treatment}_{\text{B}} = 1$
+
+parameter | estimate
+----------|---------
+$b_0$     | 1.447
+$b_1$     | -1.224
+
+Expected count of metastatic lymph nodes for Treatment A patients: $e^{1.447} = 4.25$
+
+Expected count of metastatic lymph nodes for Treatment B patients: $e^{1.447 + (-1.224)} = 1.25$
+
+___
+
+Deviance
+
+<!-- \text{}_{\text{}} -->
+
+$\text{Deviance}_{\text{null}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model}))$
+
+$\text{Deviance}_{\text{residual}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))$
+
+Deviance is a measure of how well GLM fits to data. It is analogous to sum of squared residuals (SSR) for SLR.
+
+Terminology:
+
+The null model is the model that includes no explanatory variables. It only includes an intercept. One expected count, considers all data points a single group. 
+
+The proposed model is the model that includes the explanatory variables of interest. The number of expected counts is equal to the number of groups.
+
+The saturated model is the model where each data point is considered a group, and the observed count consequently is the expected count.
+
+Recall the PMF of the Poisson distribution is $\Pr(k) = \frac{\lambda^k \, e^{-\lambda}}{k!}$, where $k$ is the observed count and $\lambda$ is both the expected count and variance.
+
+In the example model, our fit produced an expected count $\lambda_A = 4.25$ and an expected count $\lambda_B = 1.25$. For each data point, we use its associated $\lambda$ to compute its probability of occurring.
+
+Recall the dataset
+
+Treatment | ID | Count
+----------|----|------
+A         | 1  | 7
+A         | 2  | 4
+A         | 3  | 4
+A         | 4  | 2
+B         | 5  | 3
+B         | 6  | 1
+B         | 7  | 1
+B         | 8  | 0
+
+The probability of observing 7 metastatic lymph nodes given the patient is receiving Treatment A is
+
+$$
+\Pr(k = 7) = \frac{4.25^7 \, e^-4.25}{7!} \approx 0.0709
+$$
+
+We do this calculation for each data point with its respective $\lambda$.
+
+The likelihood is the product of the probabilities (because they are independent):
+
+$$
+\mathrm{L}(\lambda) \prod_{i = 1}^n \frac{\lambda_i^{k_i} \, e^{-\lambda_i}}{k_i!}
+$$
+In this example, $\mathrm{L}(\lambda) = 0.0709 \cdot 0.1939 \cdot 0.1939 \cdot 0.1288 \cdot 0.0933 \cdot 0.3581 \cdot 0.3581 \cdot 0.2865 \approx 0.0000012$
+
+Because the likelihood is typically an extremely small value, we instead compute the log-likelihood: 
+
+$$\mathrm{LL}(\lambda) = \ln(\mathrm{L(\lambda))}$$.
+
+For our data, $\mathrm{LL}(\theta) = \ln(0.0709) \approx -13.65$.
+
+Poisson regression uses the method of maximum likelihood to estimate parameters. It can be visualized as
+
+<!-- Image of LL vs. candidate b_0 goes here; looks like a series of dots that forms a concave up line, where b_0 = 1.47 maximizes LL. -->
+
+The candidate $b_0$ that maximizes $\mathrm{LL}$ is chosen as the estimate. The $b_0$ and $b_1$ chosen based on maximum likelihood means the $\Pr(k)$ for each data point is optimized to have the greatest set of $\Pr(k)$ for each group. <!-- This could be said much better --> The above was an explanation of the calculation of the $\mathrm{LL}$ for the proposed model.
+
+The log-likelihood of the null model is computed using a single value for $\lambda$, the expected count irrespective of group, i.e. for all data points. The null model would be $\ln(y) = \b_0$ and the fit result is
+
+parameter | estimate
+----------|---------
+$b_0$     | 1.012
+
+$e^{1.012} \approx 2.75$, the expected count if all the data were treated as one group.
+
+Computing the log-likelihood for the null model is the same as the proposed model, but with a single value of $\lambda$.
+
+$$
+\begin{aligned}
+\Pr(k = 7) &= \frac{2.75^7 \, e^{-2.75}}{7!} &\approx 0.0151 \\
+\vdots &= \vdots \\
+\Pr(k = 0) & = \frac{2.75^0 \, e^{-2.75}}{0!} &\approx 0.0639
+\end{aligned}
+$$
+
+$\mathrm{LL}(\lambda) = -17.11$
+
+Finally, the log-likelihood of the saturated model is computed by setting $\lambda = k$ for each data point:
+
+$$
+\begin{aligned}
+\Pr(k = 7) &= \frac{7^7 \, e^{-7}}{7!} &\approx 0.1490 \\
+\vdots &= \vdots \\
+\Pr(k = 0) & = \frac{0^0 \, e^{-0}}{0!} &\approx 1
+\end{aligned}
+$$
+
+$\mathrm{LL}(\lambda) = -9.97$.
+
+___
+
+Compute deviance.
+
+$\mathrm{LL}_{\text{proposed}} = -13.65$, $\mathrm{LL}_{\text{null}} = -17.11$, $\mathrm{LL}_{\text{saturated}} = -9.97$
+
+$\text{Deviance}_{\text{null}} = 2 \times (-9.97 - (-17.11)) \approx 14.28$
+
+$\text{Deviance}_{\text{residual}} = 2 \times (-9.97 - (-13.65)) \approx 7.36$
+
+In summary, deviance compares both the null and proposed models to the saturated model, specifically the log-likelihood of the null model to the log-likelihood of the saturated model, and similarly for the proposed model, according to the formulas
+
+$\text{Deviance}_{\text{null}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model}))$
+
+$\text{Deviance}_{\text{residual}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))$
+
+To use these to assess the proposed model, compare the residual deviance to the null deviance. The residual deviance for a good model will be low relative to the null deviance.
+
+In this example, the null deviance is 14.28 and the residual deviance is 7.36&mdash;approximately half of the null deviance.
+
+___
+
+The likelihood ratio test (LRT) can be used to compare nested models. What is considered the "null model" is relative. The process usually starts with considering an intercept-only model as the null model, but once a proposed model that significantly improves upon the null model, it can then become the new null model to search for additional improvements. This is hypothesis testing for models.
+
+The LRT test statistic (TS) is
+
+$$
+D = -2 \ln\left(\frac{\mathrm{L}_\text{null}}{\mathrm{L}_\text{proposed}}\right)
+$$
+
+Recall that $\ln(1) = 0$, $\ln(x)$ when $x \in (0, 1)$ is negative, and $\ln(x)$ when $x \in (1, \infty)$ is positive. (True for any logarithm, base-10, base-$e$, base-2, etc.)
+
+The likelihood (assuming independence of observations) is the product of probabilities, each being in $[0, 1]$, so will be a negative number.
+
+Note: $D$ can be re-written using one of the laws of logarithms:
+
+$$
+\begin{aligned}
+D &= -2 \ln\left(\frac{\mathrm{L}_\text{null}}{\mathrm{L}_\text{proposed}}\right) \\
+D &= -2 \times \left[\ln(\mathrm{L}_\text{null}) - \ln(\mathrm{L}_\text{proposed})\right]
+\end{aligned}
+$$
+
+For our example where $\mathrm{LL}_\text{null} = -17.11$ and $\mathrm{LL}_\text{proposed} = -13.65$, $D \approx 6.9$.
+
+Equivalently, the deviances can be used to calculate $D$:
+
+$$
+D = \text{Deviance}_\text{null} - \text{Deviance}_\text{residual}
+$$
+
+For our example where $\text{Deviance}_\text{null}$ = 14.28 and $\text{Deviance}_\text{residual}$ = 7.36, we can see that $D \approx 6.9$.
+
+Proof: Recall that
+
+$\text{Deviance}_{\text{null}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model}))$
+
+$\text{Deviance}_{\text{residual}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))$
+
+Then
+
+$$
+\begin{aligned}
+D &= \text{Deviance}_\text{null} - \text{Deviance}_\text{residual} \\
+&= 2 \left[\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model})\right] - 2 \left[\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model})\right] \\
+&= -2 \left[(-\mathrm{LL}(\text{saturated model}) + \mathrm{LL}(\text{null model})) + (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))\right] \\
+&= -2 \left[\mathrm{LL}(\text{null model}) - \mathrm{LL}(\text{proposed model})\right]
+\end{aligned}
+$$
+
+$D \sim \chi^2$ with degrees of freedom equal to the number of *additional* estimated parameters in the proposed model. In our example,
+
+model          | formula
+---------------|-----------------------------------------------
+null model     | $\ln(y) = b_0$
+proposed model | $\ln(y) = b_0 + b_1 \text{Treatment}_\text{B}$
+
+The number of *additional* estimated parameters is 1 ($b_1 for \text{Treatment}_\text{B}$), so use $\chi^2(\mathrm{df} = 1)$. $D \approx 6.9$, and the p-value is $0.0086 \ll 0.05$.
+
+H_0: Proposed model doesn't significantly improve upon null model
+H_a: Proposed model significantly improves upon null model
+
+At $\alpha = 0.05$, reject H_0: Go with the proposed model.
+
+If we seek further improvement, the proposed model becomes the new null model, and a new proposed model that extends the new null model is established and tested in the same way.
+
+___
+
+The LRT is one way to compare models, but the Akaike's Information Criterion (AIC) is a method that has a penalty built in for oversaturated (a.k.a. overspecified models). Additionally, it can be used to compare models that are not nested:
+
+$$
+\mathrm{AIC} = 2p - 2\mathrm{LL}
+$$
+
+where $p$ is the number of parameters and $\mathrm{LL}$ is the log-likelihood of the model.
+
+The optimum AIC is achieved when $p$ is its lowest while $\mathrm{LL}$ is its greatest. AIC chooses the model that is simple as possible while still fitting the data well. Using the example, where $\mathrm{LL}_\text{null} = -17.11$ and $\mathrm{LL}_\text{proposed} = -13.65$,
+
+$$
+\begin{aligned}
+\mathrm{AIC}_\text{null} &= 2 \times 1 - 2 \times (-17.11) \approx 36.22 \\
+\mathrm{AIC}_\text{proposed} &= 2 \times 2 - 2 \times (-13.65) \approx 31.30
+\end{aligned}
+$$
+
+The model with the lowest AIC is preferred, which is the proposed model.
+
+___
+
+If the model is over-dispersed or under-dispersed, one might need to use *quasi-Poisson regression* or *negative binomial regression*. Over-dispersion is generally when the variance is much larger than the mean. Similarly, under-dispersion is when the variance is much smaller than the mean. So when the variance can't be assumed equal to the mean, this is a problem for Poisson regression as it is a major assumption. Quasi-Poisson and negative binomial regression frameworks solve problems related to over- and under-dispersion.
+
+The previous sections were focused on categorical explanatory variables (e.g. Treatment B). With categorical variables, there is a natural grouping of data points. The variance requires more than one data point to compute. For example, Treatment A had a variance of 4.25 (which was equal to the mean of Treatment A), while the variance of Treatment B was 1.58 (slightly larger than the Treatment B mean of 1.25).
+
+With a continuous explanatory variable such as age (not age category, but age number), there may not be more than one observation. For example, a 72-year-old participant who has volunteered to have their MSLNs counted may be the only 72 year old in the study. The variance can't be computed for 72 year olds because there is only one. And since the variance can't be computed, it can't be compared to the mean to check the assumption of variance.
+
+The solution: Set bins on the explanatory variable and compute the mean and variance within the bins. Plot variance vs. mean with a reference line. For Poisson, since the assumption is that the mean and variance are equal, set the line to have a slope of 1. This strategy can work for other distributions as well; just use a reference line that describes the theoretical relationship between the mean and variance.
+
+Another diagnostic is a familiar one: residuals:
+
+$$
+r_i = y_i - \hat{y_i}
+$$
+
+Plot the residuals vs. the explanatory variable(s) and try to visually detect patterns. A band pattern means the variance is equal as the explanatory variable increases. For Poisson regression, this is *not* desired. What *is desired* is a cone that opens to the right, which indicates that as the explantory variable increases, so does the variance.
+
+A better version of this plot is residuals vs. fitted values. Yet another diagnostic is the Pearson residuals:
+
+$$
+r_i^P = \frac{y_i - \hat{y_i}}{\sqrt{\hat{y_i}}}
+$$
+
+Plotting the Pearson residuals vs. the fitted values should yield a plot with a band pattern, in contrast to the previous residual plots. In this case, the desired patter *is* a band.
+
+Dispersion is the spread of the data. The variance and standard deviation are measures of dispersion.
+
+Formally, over-dispersion is the presence of more variability in the data than expected. This could occur when explanatory variables are missing from the model.
+
+Underdispersion is the presence of less variability than expected.
+
+In Poisson regression, if overdispersion is an issue, the standard errors will be underestimated. The consequence is that p-values will be small, increasing the risk for a Type-I error.
+
+___
+
+Quasi-Poisson regression: A model framework for under- or over-dispersed data. The quasi-Poisson model has one additional parameter: how much the variance changes *linearly* in relation to the mean.
+
+The parameter estimates will be the same as Poisson regression, but the SEs and p-values will differ as the model framework is designed to adjust for over- or underdispersion.
+
+Quasi-Poisson models are not fit with maximum likelihood, and consequently, AIC can't be computed (as it is a function of likelihood).
+
+The dispersion parameter is estimated using the equation $\text{var} = \phi \text{mean}$, where
+
+$$
+\hat{\phi} = \frac{1}{N - k} \sum \frac{\left(y_i - \hat{y_i}\right)^2}{\hat{y_i}}
+$$
+
+Note: $\frac{y_i - \hat{y_i}}{\sqrt{\hat{y_i}}}$ appears in $\hat{\phi}$, but squared. It is the Pearson residual formula:
+
+$$
+\begin{aligned}
+\left(\frac{y_i - \hat{y_i}}{\sqrt{\hat{y_i}}}\right)^2 &= \frac{\left(y_i - \hat{y_i}\right)}{\hat{y_i}} \\
+&= \left(r_i^P\right)^2
+\end{aligned}
+$$
+
+$N$ is the number of data points; $k$ is the number of estimated parameters.
+
+In our example, $N = 71$ and $k = 2$ (slope and intercept).
+
+Suppose $\left(r_i^P\right)^2 = 65.6$. Then $\hat{\phi} = \frac{1}{69} \times 65.6 = 0.95$.
+
+To determine if there is under- or over-dispersion, compare $\hat{\phi}$ to 1:
+
+$\hat{phi}$ < 1 implies underdispersion; $\hat{phi}$ > 1 implies overdispersion.
+
+Recall the method of arbitrarily grouping the data to compute the mean and variance for each group. Recall those points could be plotted as variance vs. mean, and the line of perfectly equal mean and variance had a slope of 1. In this example, we computed $\hat{\phi} = 0.95$, so this value could be used in place of 1 on that plot. When the slope is 1, this implies the data are neither under- or over-dispersed.
+
+This line adjusts the estimate (or rule of thumb) for what the variance should be for a given mean. When the slope was 1, a mean of 60 should have a variance of 60.
+
+Our equation $\text{var} = \phi \text{mean}$ would be 
+
+$$
+\begin{aligned}
+\text{var} &= \phi \text{mean} \\
+&= 1 \times 60 \\
+& = 60
+\end{aligned}
+$$
+
+Since $\hat{\phi} = 0.95$,
+
+$$
+\begin{aligned}
+\text{var} &= \phi \text{mean} \\
+&= 0.95 \times 60 \\
+& = 57
+\end{aligned}
+$$
+
+For a mean of 60, we'd expect a variance of 57.
+
+Hypothesis tests for $\hat{\phi} = 1$ exist and may be present in R or even appear in the default output. This is an objective way to dtermine if $\hat{\phi}$ is significantly different than 1.
+
+If the relationship between the variance and the mean is linear, and over- or under-dispersion is present, then quasi-Poisson is the go-to solution.
+
+If the relationship is *non-linear*, the go-to solution is Negative Binomial (NB) regression.
+
+Going back to the familiar diagnostic of Pearson residuals, over-dispered situation appears as a cone. Recall, if mean = variance, the $r_i^P$ vs. $\hat{y}$ plot will have a band pattern.
+
+The relationship between the variance and the mean for the NB model is
+
+$$
+\text{var} = \mu + \frac{\mu^2}{\theta}
+$$
+
+where $\mu$ is the mean (x-axis in the line plot) and $\theta$, an estimated parameter which may account for overdispersion. If $\theta$ gets sufficiently large, then $\frac{\mu^2}{\theta} \rightarrow 0$, and the variance equals the mean. If not, this will produce the approximate non-linear relationship between the variance and the mean. (The variance is a function of the mean.)
+
+**Important:** The parameter $\theta$ is always positive, and consequently the variance can't be smaller than the mean. Therefore, NB regression can only account for *overdispersion*. This is in contrast to quasi-Poisson regression, which can handle both over- and under-dispersion.
+
+Recall: The coefficients produced by Poisson and quasi-Poisson are identical. This is not the case for NB regression. They may be similar, but not equal.
+
+The main difference between the three frameworks is the estimated SEs (and consequently p-values).
+
+<!-- Fact check needed
+
+If over-dispersion is present, then all three models can be fit. However, if all models produce nearly identical results (SEs, p-values), then go with the simpler one (or simplest one), e.g. the Poisson
+
+-->
+
+___
+
+The last special case is zero-inflation. Zero-inflation occurs when there is a subgroup in the sample which can only produce zeros.
+
+The most straightforward example is asking people how much TV they watched yesterday in hours. Maybe the assumption is that every respondent owns a TV, so an answer of "none" (i.e. 0 hours) would imply they didn't watch TV by chance. However, it is also possible that they don't own a TV at all, so they certainly didn't watch TV. The respondents who don't own a TV are examples of the aforementioned subgroup. The zeros produced by this subgroup can't be explained by the Poisson distribution. The technical term for these zeros is *structural zeros*.
+
+Let's compare a non-zero-inflated situation with a zero-inflated situation to highlight the issue.
+
+Suppose 300 cancer patients were included in a study where they each had the number of MSLNs counted. For each outcome (1 MSLN, 2 MSLNs, etc.), the number of patients was counted.
+
+Let the mean of the sample be 5, so $\lambda = 5$. For each outcome, the expected number of patients can be computed as
+
+$$
+300 \times \Pr(X = 0) = 300 \times \frac{5^0 \, e^{-5}}{0!} = 300 \times 0.0067 \approx 2.01
+$$
+
+So we expect (assuming $\lambda = 5$) that about $\frac{2}{300}$ patients should have 0 MSLNs. We actually observed 4, but this isn't much different. Continue for each outcome to produce expected counts. the result can be visualized as
+
+<!-- plot goes here -->
+

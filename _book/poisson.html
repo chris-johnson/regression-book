@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Regression with R - 4&nbsp; Poisson regression</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./lmm.html" rel="next">
+<link href="./logistic.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Poisson regression</span></h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Regression with R</a> 
+    </div>
+      </div>
+      <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">Preface</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./likelihood.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Likelihood</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mlr.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Multiple linear regression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./logistic.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Logistic regression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./poisson.html" class="sidebar-item-text sidebar-link active"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Poisson regression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./lmm.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Linear mixed effects models</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mem.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Mixed effects models</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./r.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">R</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">References</a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Poisson regression</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>Poisson regression is based on the exponential function <span class="math inline">\(y = e^{b_0 + b_1 \times x}\)</span>. The exponent of the exponential function is linear, and linear regression requires the RHS to be linear, so a simple log transformation will</p>
+<p><span class="math display">\[
+\begin{aligned}
+y &amp;= e^{b_0 + b_1 \times x} \\
+\ln(y) &amp;= b_0 + b_1 \times x \\
+\end{aligned}
+\]</span></p>
+<p>Poisson regression: Modeling rate data and the offset</p>
+<p>Pt. 1 notes are on the whiteboard. Notes adapted from TileStats</p>
+<p>Data: Number of births of rabbits in spring, weekly, in a certain area.</p>
+<p>General trend: Birth rate is higher in early spring and lower in late spring. Counts for this dataset were observed using a fixed time interval.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Amount of time</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.85</td>
+<td>90</td>
+</tr>
+<tr class="even">
+<td>1.10</td>
+<td>76</td>
+</tr>
+<tr class="odd">
+<td>0.85</td>
+<td>37</td>
+</tr>
+<tr class="even">
+<td>1.20</td>
+<td>27</td>
+</tr>
+<tr class="odd">
+<td>0.95</td>
+<td>19</td>
+</tr>
+<tr class="even">
+<td>1.10</td>
+<td>13</td>
+</tr>
+<tr class="odd">
+<td>0.90</td>
+<td>9</td>
+</tr>
+</tbody>
+</table>
+<p>Note: 0.85 weeks is approximately 142 hours (168 hours in a 7-day week).</p>
+<p>Rates are counts per time. In a situation where the time intervals differ, calculate rates.</p>
+<p>To use rates in the Poisson regression framework, we model</p>
+<p><span class="math display">\[
+\ln\left(\frac{y}{t}\right) = b_0 + b_1 \times \text{time}
+\]</span></p>
+<p>where <span class="math inline">\(y\)</span> is the count and <span class="math inline">\(t\)</span> is the time interval. The Poisson regression framework is expecting counts, so use one of the laws of logarithms:</p>
+<p><span class="math inline">\(\ln\left(\frac{a}{b}\right) = \ln(a) - \ln(b)\)</span></p>
+<p>So our model becomes</p>
+<p><span class="math display">\[
+\begin{aligned}
+\ln\left(\frac{y}{t}\right) &amp;= b_0 + b_1 \times \text{time} \\
+\ln(y) - \ln(t) &amp;= b_0 + b_1 \times \text{time} \\
+\ln(y) &amp;= b_0 + b_1 \times \text{time} + \ln(t)
+\end{aligned}
+\]</span></p>
+<p>Now the counts are isolated on the LHS. <span class="math inline">\(\ln(t)\)</span> on the RHS is the <em>offset</em>. Note: The offset is <em>not a parameter</em>, so it doesn’t require estimation. It is simply an additive adjustmen tto account for unequal time intervals.</p>
+<p>Let’s switch to a new example: Cancer cases over a certain time period for a given population.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Age range</th>
+<th>Number of cases</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>40–59</td>
+<td>30</td>
+</tr>
+<tr class="even">
+<td>60–79</td>
+<td>31</td>
+</tr>
+<tr class="odd">
+<td>80+</td>
+<td>29</td>
+</tr>
+</tbody>
+</table>
+<p>Subject matter expertise might suggest more cancer cases in the older age groups. In other words, we might expect moer cancer cases in the elderly populations. An explanation for the observed data where the number of cases are similar for each age group (contrary to SME expectations) might be population.</p>
+<p>There are more individuals in the 40–59 population, so more opportunities for cancer to occur, and in turn, more opportunities for cancer to be observed.</p>
+<p>To adjust, we compute <em>cases per population</em> (i.e.&nbsp;compute a rate).</p>
+<p>A model for this dataset would be</p>
+<p><span class="math display">\[
+\ln(y) = b_0 + b_1 \times \text{Age}_{\text{60-79}} + b_2 \times \text{Age}_{\text{80+}} + \ln(n)
+\]</span></p>
+<p>where <span class="math inline">\(y\)</span> is the number of cases, <span class="math inline">\(n\)</span> is the population size. This model uses the age group 45–59 as the reference level. In this example, <span class="math inline">\(n = (\text{pop}_{\text{40-59}}, \, \text{pop}_{\text{60-79}}, \, \text{pop}_{\text{80+}})\)</span>.</p>
+<p><strong>Important:</strong> We can’t model rates directly because the information about the number of counts and population size is lost in the process of computing rates. We must model the counts, and if the unit (time, area, population) isn’t equal for each group, we must include an offset.</p>
+<hr>
+<p>Notes about the explanatory variables on a categorical scale require discussion as well.</p>
+<p>Dataset: Lymph nodes. The human body has approximately 500 lymph nodes. The number of metastatic lymph nodes is a prognostic factor because it is associated with the progression of cancer. Let A and B be cancer treatments. 8 patients, four per treatment group.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Counts A</th>
+<th>Counts B</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>7</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>or in long form</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Treatment</th>
+<th>ID</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td>1</td>
+<td>7</td>
+</tr>
+<tr class="even">
+<td>A</td>
+<td>2</td>
+<td>4</td>
+</tr>
+<tr class="odd">
+<td>A</td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr class="even">
+<td>A</td>
+<td>4</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>B</td>
+<td>5</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td>6</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>B</td>
+<td>7</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td>8</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>When a variable is a factor, it must be recoded. Let Treatment A be our baseline. Then the model becomes</p>
+<p><span class="math display">\[\ln(y) = b_0 + b_1 \times \text{Treatment}_\text{B}\]</span></p>
+<p>where <span class="math inline">\(\text{Treatment}_\text{B}\)</span> can be 0 (for no) or 1 (for yes). When <span class="math inline">\(\text{Treatment}_\text{B} = 0\)</span>, the model returns the expected counts for <span class="math inline">\(\text{Treatment}_\text{A}\)</span>. When <span class="math inline">\(\text{Treatment}_\text{B} = 1\)</span>, the model returns the expected counts for <span class="math inline">\(\text{Treatment}_\text{B}\)</span>.</p>
+<p>Treatment A:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\ln(y) &amp;= b_0 + b_1 \times 0 \\
+&amp;= b_0
+\end{aligned}
+\]</span></p>
+<p>Treatment B:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\ln(y) &amp;= b_0 + b_1 \times 1 \\
+&amp;= b_0 + b_1
+\end{aligned}
+\]</span></p>
+<p>So the expected log-counts for Treatment A is just the intercept, <span class="math inline">\(ln(y) = b_0\)</span>, and the expected log-counts for Treatment B is <span class="math inline">\(ln(y) = b_0 + b_1\)</span>.</p>
+<p>Let’s assume R returns the following:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>parameter</th>
+<th>estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(b_0\)</span></td>
+<td>1.447</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(b_1\)</span></td>
+<td>-1.224</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(\ln(y) = 1.447 - 1.224 \times \text{Treatment}_{\text{B}}\)</span>.</p>
+<p>Let <span class="math inline">\(\text{Treatment}_{\text{B}} = 0\)</span> so we can interpret <span class="math inline">\(b_0\)</span>. <span class="math inline">\(\ln(y) = 1.447\)</span> is interpreted as “the log-count for Treatment A is 1.447”.</p>
+<p><span class="math inline">\(e^{\ln(y)} = e^{1.447}\)</span> becomes <span class="math inline">\(y = e^{1.447} = 4.25\)</span>, which is interpreted as “the expected count of metastatic lymph nodes for patients in Treatment A is 4.25”.</p>
+<p>Let <span class="math inline">\(\text{Treatment}_{\text{B}} = 1\)</span> so we can interpret <span class="math inline">\(b_1 = -1.224\)</span>.</p>
+<p><span class="math inline">\(ln(y) = 1.447 - 1.224 = 0.223\)</span>. The expected log-count of MLNs for Treatment B patients i 0.223.</p>
+<p><span class="math inline">\(y = e^{0.223}= 1.25\)</span>. The expected count of MLNs for Treatment B patients is 1.25.</p>
+<p><strong>Imporant:</strong> The <em>incident rate ratio</em> (IRR) is <span class="math inline">\(e^{b_1} = e^{-1.224} = 0.294\)</span> (the multiplicative factor). For this scenario, the expected count for Treatment A multiplied by the IRR returns the expected count for Treatment B: <span class="math inline">\(4.25 \times 0.294 = 1.25\)</span>.</p>
+<p>On average, there are 70.6% (<span class="math inline">\(1 - \text{IRR} = 1 - 0.294 = 0.706\)</span>) fewer metastatic lymph nodes for patients on Treatment B than those on Treatment A.</p>
+<p>The reason we don’t just compute the means directly is because the regression output provides additional information, specifically if <span class="math inline">\(b_1\)</span> is significantly different than 0, and if so, tha there is an effect, or in other words, Treatment B has an effect. In this case, Treatment B reduces the number of metastatic lymph nodes more than Treatment A:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>parameter</th>
+<th>estimate</th>
+<th>p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(b_0\)</span></td>
+<td>1.447</td>
+<td>&lt; 0.001</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(b_1\)</span></td>
+<td>-1.224</td>
+<td>0.016</td>
+</tr>
+</tbody>
+</table>
+<p>To plot, do the following:</p>
+<p><span class="math inline">\(y = e^{b_0 + b_1 \times \text{Treatment}_\text{B}}\)</span></p>
+<p>Plug in <span class="math inline">\(\text{Treatment}_\text{B} = 0\)</span> to get Treatment A. <span class="math inline">\(Plug in \text{Treatment}_\text{B} = 1\)</span> to get Treatment B.</p>
+<p><strong>Extremely important:</strong> Do not use an unmatched t-test for count data! Counts are Poisson-distributed, and a t-test assumes data are normally distributed. Instead, use Poisson regression to detect differences between groups!</p>
+<p>Recall: Poisson regression assumes independence, fixed unit (time, space, etc.), and that the mean = variance. If these aren’t met, Poisson regression is not appropriate.</p>
+<p>Since Poisson regression returns the expected log-counts, and the expected counts can be derived, we can check the assumption mean = variance by computing the variance from the observed data:</p>
+<p>The expected count for Treatment A is <span class="math inline">\(\bar{A} \approx 4.25\)</span>; the expected count for Treatment B is <span class="math inline">\(\bar{B} \approx 1.25\)</span></p>
+<p><span class="math inline">\(\mathrm{Var}(A) = s^2_A = 4.25 \approx \bar{A}\)</span></p>
+<p><span class="math inline">\(\mathrm{Var}(B) = s^2_B = 1.58 \neq \bar{B}\)</span></p>
+<p>The variance of B is not approximately equal to the mean of B, but it is possible this is due to sampling variability. The rule of thumb is that as long as the variance is not <span class="math inline">\(2\times\)</span> the mean, they can be considered approximately equal.</p>
+<p><strong>Important:</strong> If the rule of thumb suggests the mean and variance are unequal, use Negative Binomial regression instead.</p>
+<hr>
+<p>Comparing models with likelihood ratio tests (LRT) and Akaike’s Information Criterion (AIC)</p>
+<p>Continuing with the dataset about metastatic lymph nodes. Two treatments, A and B. Four patients per treatment. Each observed for number of metastatic lymph nodes.</p>
+<p>The model: <span class="math inline">\(\ln(y) = b_0 + b_1 \times \text{Treatment}_{\text{B}}\)</span></p>
+<p>Treatment A: <span class="math inline">\(\text{Treatment}_{\text{B}} = 0\)</span></p>
+<p>Treatment B: <span class="math inline">\(\text{Treatment}_{\text{B}} = 1\)</span></p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>parameter</th>
+<th>estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(b_0\)</span></td>
+<td>1.447</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(b_1\)</span></td>
+<td>-1.224</td>
+</tr>
+</tbody>
+</table>
+<p>Expected count of metastatic lymph nodes for Treatment A patients: <span class="math inline">\(e^{1.447} = 4.25\)</span></p>
+<p>Expected count of metastatic lymph nodes for Treatment B patients: <span class="math inline">\(e^{1.447 + (-1.224)} = 1.25\)</span></p>
+<hr>
+<p>Deviance</p>
+<!-- \text{}_{\text{}} -->
+<p><span class="math inline">\(\text{Deviance}_{\text{null}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model}))\)</span></p>
+<p><span class="math inline">\(\text{Deviance}_{\text{residual}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))\)</span></p>
+<p>Deviance is a measure of how well GLM fits to data. It is analogous to sum of squared residuals (SSR) for SLR.</p>
+<p>Terminology:</p>
+<p>The null model is the model that includes no explanatory variables. It only includes an intercept. One expected count, considers all data points a single group.</p>
+<p>The proposed model is the model that includes the explanatory variables of interest. The number of expected counts is equal to the number of groups.</p>
+<p>The saturated model is the model where each data point is considered a group, and the observed count consequently is the expected count.</p>
+<p>Recall the PMF of the Poisson distribution is <span class="math inline">\(\Pr(k) = \frac{\lambda^k \, e^{-\lambda}}{k!}\)</span>, where <span class="math inline">\(k\)</span> is the observed count and <span class="math inline">\(\lambda\)</span> is both the expected count and variance.</p>
+<p>In the example model, our fit produced an expected count <span class="math inline">\(\lambda_A = 4.25\)</span> and an expected count <span class="math inline">\(\lambda_B = 1.25\)</span>. For each data point, we use its associated <span class="math inline">\(\lambda\)</span> to compute its probability of occurring.</p>
+<p>Recall the dataset</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Treatment</th>
+<th>ID</th>
+<th>Count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A</td>
+<td>1</td>
+<td>7</td>
+</tr>
+<tr class="even">
+<td>A</td>
+<td>2</td>
+<td>4</td>
+</tr>
+<tr class="odd">
+<td>A</td>
+<td>3</td>
+<td>4</td>
+</tr>
+<tr class="even">
+<td>A</td>
+<td>4</td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>B</td>
+<td>5</td>
+<td>3</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td>6</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>B</td>
+<td>7</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>B</td>
+<td>8</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>The probability of observing 7 metastatic lymph nodes given the patient is receiving Treatment A is</p>
+<p><span class="math display">\[
+\Pr(k = 7) = \frac{4.25^7 \, e^-4.25}{7!} \approx 0.0709
+\]</span></p>
+<p>We do this calculation for each data point with its respective <span class="math inline">\(\lambda\)</span>.</p>
+<p>The likelihood is the product of the probabilities (because they are independent):</p>
+<p><span class="math display">\[
+\mathrm{L}(\lambda) \prod_{i = 1}^n \frac{\lambda_i^{k_i} \, e^{-\lambda_i}}{k_i!}
+\]</span> In this example, <span class="math inline">\(\mathrm{L}(\lambda) = 0.0709 \cdot 0.1939 \cdot 0.1939 \cdot 0.1288 \cdot 0.0933 \cdot 0.3581 \cdot 0.3581 \cdot 0.2865 \approx 0.0000012\)</span></p>
+<p>Because the likelihood is typically an extremely small value, we instead compute the log-likelihood:</p>
+<p><span class="math display">\[\mathrm{LL}(\lambda) = \ln(\mathrm{L(\lambda))}\]</span>.</p>
+<p>For our data, <span class="math inline">\(\mathrm{LL}(\theta) = \ln(0.0709) \approx -13.65\)</span>.</p>
+<p>Poisson regression uses the method of maximum likelihood to estimate parameters. It can be visualized as</p>
+<!-- Image of LL vs. candidate b_0 goes here; looks like a series of dots that forms a concave up line, where b_0 = 1.47 maximizes LL. -->
+<p>The candidate <span class="math inline">\(b_0\)</span> that maximizes <span class="math inline">\(\mathrm{LL}\)</span> is chosen as the estimate. The <span class="math inline">\(b_0\)</span> and <span class="math inline">\(b_1\)</span> chosen based on maximum likelihood means the <span class="math inline">\(\Pr(k)\)</span> for each data point is optimized to have the greatest set of <span class="math inline">\(\Pr(k)\)</span> for each group. <!-- This could be said much better --> The above was an explanation of the calculation of the <span class="math inline">\(\mathrm{LL}\)</span> for the proposed model.</p>
+<p>The log-likelihood of the null model is computed using a single value for <span class="math inline">\(\lambda\)</span>, the expected count irrespective of group, i.e.&nbsp;for all data points. The null model would be <span class="math inline">\(\ln(y) = \b_0\)</span> and the fit result is</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>parameter</th>
+<th>estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(b_0\)</span></td>
+<td>1.012</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(e^{1.012} \approx 2.75\)</span>, the expected count if all the data were treated as one group.</p>
+<p>Computing the log-likelihood for the null model is the same as the proposed model, but with a single value of <span class="math inline">\(\lambda\)</span>.</p>
+<p><span class="math display">\[
+\begin{aligned}
+\Pr(k = 7) &amp;= \frac{2.75^7 \, e^{-2.75}}{7!} &amp;\approx 0.0151 \\
+\vdots &amp;= \vdots \\
+\Pr(k = 0) &amp; = \frac{2.75^0 \, e^{-2.75}}{0!} &amp;\approx 0.0639
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(\mathrm{LL}(\lambda) = -17.11\)</span></p>
+<p>Finally, the log-likelihood of the saturated model is computed by setting <span class="math inline">\(\lambda = k\)</span> for each data point:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\Pr(k = 7) &amp;= \frac{7^7 \, e^{-7}}{7!} &amp;\approx 0.1490 \\
+\vdots &amp;= \vdots \\
+\Pr(k = 0) &amp; = \frac{0^0 \, e^{-0}}{0!} &amp;\approx 1
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(\mathrm{LL}(\lambda) = -9.97\)</span>.</p>
+<hr>
+<p>Compute deviance.</p>
+<p><span class="math inline">\(\mathrm{LL}_{\text{proposed}} = -13.65\)</span>, <span class="math inline">\(\mathrm{LL}_{\text{null}} = -17.11\)</span>, <span class="math inline">\(\mathrm{LL}_{\text{saturated}} = -9.97\)</span></p>
+<p><span class="math inline">\(\text{Deviance}_{\text{null}} = 2 \times (-9.97 - (-17.11)) \approx 14.28\)</span></p>
+<p><span class="math inline">\(\text{Deviance}_{\text{residual}} = 2 \times (-9.97 - (-13.65)) \approx 7.36\)</span></p>
+<p>In summary, deviance compares both the null and proposed models to the saturated model, specifically the log-likelihood of the null model to the log-likelihood of the saturated model, and similarly for the proposed model, according to the formulas</p>
+<p><span class="math inline">\(\text{Deviance}_{\text{null}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model}))\)</span></p>
+<p><span class="math inline">\(\text{Deviance}_{\text{residual}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))\)</span></p>
+<p>To use these to assess the proposed model, compare the residual deviance to the null deviance. The residual deviance for a good model will be low relative to the null deviance.</p>
+<p>In this example, the null deviance is 14.28 and the residual deviance is 7.36—approximately half of the null deviance.</p>
+<hr>
+<p>The likelihood ratio test (LRT) can be used to compare nested models. What is considered the “null model” is relative. The process usually starts with considering an intercept-only model as the null model, but once a proposed model that significantly improves upon the null model, it can then become the new null model to search for additional improvements. This is hypothesis testing for models.</p>
+<p>The LRT test statistic (TS) is</p>
+<p><span class="math display">\[
+D = -2 \ln\left(\frac{\mathrm{L}_\text{null}}{\mathrm{L}_\text{proposed}}\right)
+\]</span></p>
+<p>Recall that <span class="math inline">\(\ln(1) = 0\)</span>, <span class="math inline">\(\ln(x)\)</span> when <span class="math inline">\(x \in (0, 1)\)</span> is negative, and <span class="math inline">\(\ln(x)\)</span> when <span class="math inline">\(x \in (1, \infty)\)</span> is positive. (True for any logarithm, base-10, base-<span class="math inline">\(e\)</span>, base-2, etc.)</p>
+<p>The likelihood (assuming independence of observations) is the product of probabilities, each being in <span class="math inline">\([0, 1]\)</span>, so will be a negative number.</p>
+<p>Note: <span class="math inline">\(D\)</span> can be re-written using one of the laws of logarithms:</p>
+<p><span class="math display">\[
+\begin{aligned}
+D &amp;= -2 \ln\left(\frac{\mathrm{L}_\text{null}}{\mathrm{L}_\text{proposed}}\right) \\
+D &amp;= -2 \times \left[\ln(\mathrm{L}_\text{null}) - \ln(\mathrm{L}_\text{proposed})\right]
+\end{aligned}
+\]</span></p>
+<p>For our example where <span class="math inline">\(\mathrm{LL}_\text{null} = -17.11\)</span> and <span class="math inline">\(\mathrm{LL}_\text{proposed} = -13.65\)</span>, <span class="math inline">\(D \approx 6.9\)</span>.</p>
+<p>Equivalently, the deviances can be used to calculate <span class="math inline">\(D\)</span>:</p>
+<p><span class="math display">\[
+D = \text{Deviance}_\text{null} - \text{Deviance}_\text{residual}
+\]</span></p>
+<p>For our example where <span class="math inline">\(\text{Deviance}_\text{null}\)</span> = 14.28 and <span class="math inline">\(\text{Deviance}_\text{residual}\)</span> = 7.36, we can see that <span class="math inline">\(D \approx 6.9\)</span>.</p>
+<p>Proof: Recall that</p>
+<p><span class="math inline">\(\text{Deviance}_{\text{null}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model}))\)</span></p>
+<p><span class="math inline">\(\text{Deviance}_{\text{residual}} = 2 \times (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))\)</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+\begin{aligned}
+D &amp;= \text{Deviance}_\text{null} - \text{Deviance}_\text{residual} \\
+&amp;= 2 \left[\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{null model})\right] - 2 \left[\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model})\right] \\
+&amp;= -2 \left[(-\mathrm{LL}(\text{saturated model}) + \mathrm{LL}(\text{null model})) + (\mathrm{LL}(\text{saturated model}) - \mathrm{LL}(\text{proposed model}))\right] \\
+&amp;= -2 \left[\mathrm{LL}(\text{null model}) - \mathrm{LL}(\text{proposed model})\right]
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(D \sim \chi^2\)</span> with degrees of freedom equal to the number of <em>additional</em> estimated parameters in the proposed model. In our example,</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>model</th>
+<th>formula</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>null model</td>
+<td><span class="math inline">\(\ln(y) = b_0\)</span></td>
+</tr>
+<tr class="even">
+<td>proposed model</td>
+<td><span class="math inline">\(\ln(y) = b_0 + b_1 \text{Treatment}_\text{B}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The number of <em>additional</em> estimated parameters is 1 (<span class="math inline">\(b_1 for \text{Treatment}_\text{B}\)</span>), so use <span class="math inline">\(\chi^2(\mathrm{df} = 1)\)</span>. <span class="math inline">\(D \approx 6.9\)</span>, and the p-value is <span class="math inline">\(0.0086 \ll 0.05\)</span>.</p>
+<p>H_0: Proposed model doesn’t significantly improve upon null model H_a: Proposed model significantly improves upon null model</p>
+<p>At <span class="math inline">\(\alpha = 0.05\)</span>, reject H_0: Go with the proposed model.</p>
+<p>If we seek further improvement, the proposed model becomes the new null model, and a new proposed model that extends the new null model is established and tested in the same way.</p>
+<hr>
+<p>The LRT is one way to compare models, but the Akaike’s Information Criterion (AIC) is a method that has a penalty built in for oversaturated (a.k.a. overspecified models). Additionally, it can be used to compare models that are not nested:</p>
+<p><span class="math display">\[
+\mathrm{AIC} = 2p - 2\mathrm{LL}
+\]</span></p>
+<p>where <span class="math inline">\(p\)</span> is the number of parameters and <span class="math inline">\(\mathrm{LL}\)</span> is the log-likelihood of the model.</p>
+<p>The optimum AIC is achieved when <span class="math inline">\(p\)</span> is its lowest while <span class="math inline">\(\mathrm{LL}\)</span> is its greatest. AIC chooses the model that is simple as possible while still fitting the data well. Using the example, where <span class="math inline">\(\mathrm{LL}_\text{null} = -17.11\)</span> and <span class="math inline">\(\mathrm{LL}_\text{proposed} = -13.65\)</span>,</p>
+<p><span class="math display">\[
+\begin{aligned}
+\mathrm{AIC}_\text{null} &amp;= 2 \times 1 - 2 \times (-17.11) \approx 36.22 \\
+\mathrm{AIC}_\text{proposed} &amp;= 2 \times 2 - 2 \times (-13.65) \approx 31.30
+\end{aligned}
+\]</span></p>
+<p>The model with the lowest AIC is preferred, which is the proposed model.</p>
+<hr>
+<p>If the model is over-dispersed or under-dispersed, one might need to use <em>quasi-Poisson regression</em> or <em>negative binomial regression</em>. Over-dispersion is generally when the variance is much larger than the mean. Similarly, under-dispersion is when the variance is much smaller than the mean. So when the variance can’t be assumed equal to the mean, this is a problem for Poisson regression as it is a major assumption. Quasi-Poisson and negative binomial regression frameworks solve problems related to over- and under-dispersion.</p>
+<p>The previous sections were focused on categorical explanatory variables (e.g.&nbsp;Treatment B). With categorical variables, there is a natural grouping of data points. The variance requires more than one data point to compute. For example, Treatment A had a variance of 4.25 (which was equal to the mean of Treatment A), while the variance of Treatment B was 1.58 (slightly larger than the Treatment B mean of 1.25).</p>
+<p>With a continuous explanatory variable such as age (not age category, but age number), there may not be more than one observation. For example, a 72-year-old participant who has volunteered to have their MSLNs counted may be the only 72 year old in the study. The variance can’t be computed for 72 year olds because there is only one. And since the variance can’t be computed, it can’t be compared to the mean to check the assumption of variance.</p>
+<p>The solution: Set bins on the explanatory variable and compute the mean and variance within the bins. Plot variance vs.&nbsp;mean with a reference line. For Poisson, since the assumption is that the mean and variance are equal, set the line to have a slope of 1. This strategy can work for other distributions as well; just use a reference line that describes the theoretical relationship between the mean and variance.</p>
+<p>Another diagnostic is a familiar one: residuals:</p>
+<p><span class="math display">\[
+r_i = y_i - \hat{y_i}
+\]</span></p>
+<p>Plot the residuals vs.&nbsp;the explanatory variable(s) and try to visually detect patterns. A band pattern means the variance is equal as the explanatory variable increases. For Poisson regression, this is <em>not</em> desired. What <em>is desired</em> is a cone that opens to the right, which indicates that as the explantory variable increases, so does the variance.</p>
+<p>A better version of this plot is residuals vs.&nbsp;fitted values. Yet another diagnostic is the Pearson residuals:</p>
+<p><span class="math display">\[
+r_i^P = \frac{y_i - \hat{y_i}}{\sqrt{\hat{y_i}}}
+\]</span></p>
+<p>Plotting the Pearson residuals vs.&nbsp;the fitted values should yield a plot with a band pattern, in contrast to the previous residual plots. In this case, the desired patter <em>is</em> a band.</p>
+<p>Dispersion is the spread of the data. The variance and standard deviation are measures of dispersion.</p>
+<p>Formally, over-dispersion is the presence of more variability in the data than expected. This could occur when explanatory variables are missing from the model.</p>
+<p>Underdispersion is the presence of less variability than expected.</p>
+<p>In Poisson regression, if overdispersion is an issue, the standard errors will be underestimated. The consequence is that p-values will be small, increasing the risk for a Type-I error.</p>
+<hr>
+<p>Quasi-Poisson regression: A model framework for under- or over-dispersed data. The quasi-Poisson model has one additional parameter: how much the variance changes <em>linearly</em> in relation to the mean.</p>
+<p>The parameter estimates will be the same as Poisson regression, but the SEs and p-values will differ as the model framework is designed to adjust for over- or underdispersion.</p>
+<p>Quasi-Poisson models are not fit with maximum likelihood, and consequently, AIC can’t be computed (as it is a function of likelihood).</p>
+<p>The dispersion parameter is estimated using the equation <span class="math inline">\(\text{var} = \phi \text{mean}\)</span>, where</p>
+<p><span class="math display">\[
+\hat{\phi} = \frac{1}{N - k} \sum \frac{\left(y_i - \hat{y_i}\right)^2}{\hat{y_i}}
+\]</span></p>
+<p>Note: <span class="math inline">\(\frac{y_i - \hat{y_i}}{\sqrt{\hat{y_i}}}\)</span> appears in <span class="math inline">\(\hat{\phi}\)</span>, but squared. It is the Pearson residual formula:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\left(\frac{y_i - \hat{y_i}}{\sqrt{\hat{y_i}}}\right)^2 &amp;= \frac{\left(y_i - \hat{y_i}\right)}{\hat{y_i}} \\
+&amp;= \left(r_i^P\right)^2
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(N\)</span> is the number of data points; <span class="math inline">\(k\)</span> is the number of estimated parameters.</p>
+<p>In our example, <span class="math inline">\(N = 71\)</span> and <span class="math inline">\(k = 2\)</span> (slope and intercept).</p>
+<p>Suppose <span class="math inline">\(\left(r_i^P\right)^2 = 65.6\)</span>. Then <span class="math inline">\(\hat{\phi} = \frac{1}{69} \times 65.6 = 0.95\)</span>.</p>
+<p>To determine if there is under- or over-dispersion, compare <span class="math inline">\(\hat{\phi}\)</span> to 1:</p>
+<p><span class="math inline">\(\hat{phi}\)</span> &lt; 1 implies underdispersion; <span class="math inline">\(\hat{phi}\)</span> &gt; 1 implies overdispersion.</p>
+<p>Recall the method of arbitrarily grouping the data to compute the mean and variance for each group. Recall those points could be plotted as variance vs.&nbsp;mean, and the line of perfectly equal mean and variance had a slope of 1. In this example, we computed <span class="math inline">\(\hat{\phi} = 0.95\)</span>, so this value could be used in place of 1 on that plot. When the slope is 1, this implies the data are neither under- or over-dispersed.</p>
+<p>This line adjusts the estimate (or rule of thumb) for what the variance should be for a given mean. When the slope was 1, a mean of 60 should have a variance of 60.</p>
+<p>Our equation <span class="math inline">\(\text{var} = \phi \text{mean}\)</span> would be</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{var} &amp;= \phi \text{mean} \\
+&amp;= 1 \times 60 \\
+&amp; = 60
+\end{aligned}
+\]</span></p>
+<p>Since <span class="math inline">\(\hat{\phi} = 0.95\)</span>,</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{var} &amp;= \phi \text{mean} \\
+&amp;= 0.95 \times 60 \\
+&amp; = 57
+\end{aligned}
+\]</span></p>
+<p>For a mean of 60, we’d expect a variance of 57.</p>
+<p>Hypothesis tests for <span class="math inline">\(\hat{\phi} = 1\)</span> exist and may be present in R or even appear in the default output. This is an objective way to dtermine if <span class="math inline">\(\hat{\phi}\)</span> is significantly different than 1.</p>
+<p>If the relationship between the variance and the mean is linear, and over- or under-dispersion is present, then quasi-Poisson is the go-to solution.</p>
+<p>If the relationship is <em>non-linear</em>, the go-to solution is Negative Binomial (NB) regression.</p>
+<p>Going back to the familiar diagnostic of Pearson residuals, over-dispered situation appears as a cone. Recall, if mean = variance, the <span class="math inline">\(r_i^P\)</span> vs.&nbsp;<span class="math inline">\(\hat{y}\)</span> plot will have a band pattern.</p>
+<p>The relationship between the variance and the mean for the NB model is</p>
+<p><span class="math display">\[
+\text{var} = \mu + \frac{\mu^2}{\theta}
+\]</span></p>
+<p>where <span class="math inline">\(\mu\)</span> is the mean (x-axis in the line plot) and <span class="math inline">\(\theta\)</span>, an estimated parameter which may account for overdispersion. If <span class="math inline">\(\theta\)</span> gets sufficiently large, then <span class="math inline">\(\frac{\mu^2}{\theta} \rightarrow 0\)</span>, and the variance equals the mean. If not, this will produce the approximate non-linear relationship between the variance and the mean. (The variance is a function of the mean.)</p>
+<p><strong>Important:</strong> The parameter <span class="math inline">\(\theta\)</span> is always positive, and consequently the variance can’t be smaller than the mean. Therefore, NB regression can only account for <em>overdispersion</em>. This is in contrast to quasi-Poisson regression, which can handle both over- and under-dispersion.</p>
+<p>Recall: The coefficients produced by Poisson and quasi-Poisson are identical. This is not the case for NB regression. They may be similar, but not equal.</p>
+<p>The main difference between the three frameworks is the estimated SEs (and consequently p-values).</p>
+<!-- Fact check needed
+
+If over-dispersion is present, then all three models can be fit. However, if all models produce nearly identical results (SEs, p-values), then go with the simpler one (or simplest one), e.g. the Poisson
+
+-->
+<hr>
+<p>The last special case is zero-inflation. Zero-inflation occurs when there is a subgroup in the sample which can only produce zeros.</p>
+<p>The most straightforward example is asking people how much TV they watched yesterday in hours. Maybe the assumption is that every respondent owns a TV, so an answer of “none” (i.e.&nbsp;0 hours) would imply they didn’t watch TV by chance. However, it is also possible that they don’t own a TV at all, so they certainly didn’t watch TV. The respondents who don’t own a TV are examples of the aforementioned subgroup. The zeros produced by this subgroup can’t be explained by the Poisson distribution. The technical term for these zeros is <em>structural zeros</em>.</p>
+<p>Let’s compare a non-zero-inflated situation with a zero-inflated situation to highlight the issue.</p>
+<p>Suppose 300 cancer patients were included in a study where they each had the number of MSLNs counted. For each outcome (1 MSLN, 2 MSLNs, etc.), the number of patients was counted.</p>
+<p>Let the mean of the sample be 5, so <span class="math inline">\(\lambda = 5\)</span>. For each outcome, the expected number of patients can be computed as</p>
+<p><span class="math display">\[
+300 \times \Pr(X = 0) = 300 \times \frac{5^0 \, e^{-5}}{0!} = 300 \times 0.0067 \approx 2.01
+\]</span></p>
+<p>So we expect (assuming <span class="math inline">\(\lambda = 5\)</span>) that about <span class="math inline">\(\frac{2}{300}\)</span> patients should have 0 MSLNs. We actually observed 4, but this isn’t much different. Continue for each outcome to produce expected counts. the result can be visualized as</p>
+<!-- plot goes here -->
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./logistic.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Logistic regression</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./lmm.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Linear mixed effects models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>

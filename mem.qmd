@@ -1,0 +1,135 @@
+# Mixed effects models
+
+
+
+<!-- Outstanding questions 
+
+What is a contrast, exactly? I verbatim had written "Is a contrast lm(y ~ x)?"
+When is an interaction appropriate? (I think I have the answer.)
+How does an interaction differ from a random effect?
+Do interactions make sense in mixed effects models?
+When to log-transform? Example: The distribution of populations (by county within state, by state within country, etc.) is typically right-skewed.
+Below, it is suggested to use uncorrelated random effects if the model isn't fitting, or if your SME tells you to. What is the meaning of correlated random effects? Uncorrelated random effects?
+"Small populations are subject to random, stochastic variability." See demographic stochasticity in "Linear mixed effects model - birth rates data" on DataCamp.
+How to interpret REML criterion at convergence?
+The rule of <30 for count data: Does this mean group size (of random effect)?
+-->
+
+## Re-reference
+
+"Random effects in regressions with School Data" on DataCamp.
+Chapter 2 "Linear Mixed Effects Models" covers interpreting mixed effects models.
+
+## Facts
+
+* Hierarchical model allows parameter sharing across groups
+* Outliers in groups with small sample sizes have less of an effect if treated as a random effect
+* Random effect parameters assume data share a common error distribution and can produce different estimates when there are small amounts of data or outliers.
+* Random effects are usually not plotted <!-- This came from DataCamp, however on YouTube, I think I've seen them plotted. -->
+* A random effect intercept comes from a shared distribution of all random effect intercepts (?)
+* A random effect slope comes from a shared distribution of all random effect slopes. (?)
+* Small populations are subject to random, stochastic variability.
+* Restricted Maximum Likelihood (REML) is a method to fit the model when maximum likelihood fails to fit a mixed model. Mixed models are numerically difficult.
+* There is no need to use arcsine transforms; use generalized linear mixed effects models.
+* Linear mixed models assume the residuals are normally distributed.
+* You can always aggregate data to answer new questions, then fit new models. Primary terms must be included, while additinoal terms make the story more full. Models can explain data. Adding terms helps explain variability. Hence "explanatory variables". Models can predict the future. Adding terms improves the accuracy of predictions. Hence "predictor variables". predictor $\rightarrow$ response, explanatory $\rightarrow$ outcome.
+* Models can answer groups of related questions. But different questions might require different models.
+* "Trend" = "slope coefficient" that differs from 0, i.e. is statistically significant.
+* Power refers to the ability to detect statistically significant differences or trends.
+
+## Fixed effect or random effect?
+
+Fixed effects answer core questions; random effects "correct for".
+
+If planning to use random intercepts (or to determine you should), plot lines by group with `geom_line()` and plot trend lines with `geom_smooth()`. If all points have similar ranges and means, don't use random intercepts. If the trends look consistent across groups, don't use random slopes. Note: These are guidelines, not rules.
+
+Random effects allow one to say "corrected for".
+
+## Plot the data
+
+Before fitting a model, plot the data. This allows trends to be uncovered, data points and outliers to be discovered, or other aspects to be noted and considered later in the process.
+
+GLMs can be plotted with `stat_smooth(method = "glm", method.args = list(family = ""))`.
+
+It seems permissable to use `stat_smooth()` to produce trend lines for each group as an approximation for `glmer()` outputs.
+
+## MEMs in R
+
+The `lme4` package
+
+`(1 | group)` random intercept
+`(var | group)` random slope
+
+A `|` requests that the random effects are correlated; a `||` requests that the random effects are uncorrelated. Uncorrelated random effects can be easier to interpret. Additionally, if a model with *correlated* random effects is failing to fit, specifying uncorrelated random effects can solve this problem. SMEs might request uncorrelated random effects. Remember: "Uncorrelated" is not equivalent to "independent".
+
+`(continuous predictor | random effect group)` = random slope
+
+`y ~ 1 + (1 | group)` is identical to `y ~ (1 | group)` which estimates a global intercept and a random intercept.
+
+The reference group is always the first level of the factor.
+
+`lme4::lmer()`
+
+The package `broom` no longer supports models fit with `{lme4}`. Use the `broom.mixed` package.
+
+It is perfectly fine to include a predictor as both a fixed and random effect. For an intercept, the fixed intercept is estimated for all data (no groups) while the random intercept adjusts by group. For a slope, the same: overall slope + slope by group. If specifying both in a model, the fixed effect should go before the random effect.
+
+Possibilities of `lmer` models: random intercept; fixed mean; nested intercepts; multiple intercepts; correlated random slopes; correlated random intercepts; uncorrelated random slopes; uncorrelated random intercepts.
+
+`broom.mixed::tidy()` can be handy, but is complex.
+
+`family` is the error distribution, how the error distribution is linked to the observed data.
+
+### Analyzing output
+
+`tidy(model) %>% filter(term = x1)`
+
+`tidy(model, conf.int = TRUE)`
+
+If adding a term to the model reduces the standard error for an existing term, this means inclusion of the new term explains a source of variability in the data.
+
+`print()` prints REML, input formula, REML criterion, SD for random effect and residuals, number of observations and groups, fixed effect (similar to `lm()`). `summary()` has everything from `print()`, but also summary details of residuals, standard errors and t-values for fixed effects, and correlations of estimators.
+
+`fixef()` extracts fixed effects and `ranef()` extracts random effects. `confint()` extracts confidence intervals for the fixed effects. (There are no confidence intervals for random effects.)
+
+The package `lmerTest` is a package for ad-hoc estimation of p-values for random effects. See the American Statistical Association's statement about p-values. `lmerTest::lmer()` has a similar (if not the same) syntax as `lme4::lmer()`.
+
+ANOVA is used to compare models; it tells which model explains more variability. Additional model selection methods exist (e.g. AIC), but were beyond the scope of the DataCamp course. Example with ANOVA: build null model with random intercept only vs. a model with random intercept and slope predictor. The null model can be anything. `anova()`: `Pr(>ChiSq)` is the output from the null hypothesis of both models explaining the same amount of variability.
+
+Plot point estimates with `geom_point()` and confidence intervals with `geom_linerange()`. Add a reference line at 0 with `geom_hline()` and finally use `coord_flip()`. This is a plot that shows if 0 is in the confidence interval.
+
+### Troubleshooting
+
+Use `scale()` to make model more numerically stable. `mutate(var_scaled = scale(var))`
+
+If the model isn't fitting, look at the REML criterion at convergence.
+
+`scale()` can be used when either of the following warning messages are produced:
+
+* unable to evaluated scaled gradient
+* Hessian with X negative eigenvalues
+
+Scale so that the first value or middle value is 0. The former can yield a coefficient that is easier to explain.
+
+### Predictions
+
+Let `lmer_out` be a model.
+
+`original_dataset %>% mutate(lmer_predict = predict(lmer_out))`
+
+## Logistic regression
+
+An assumption of binomial regression is monotonic.
+
+GLM with binomial family. Also called binomial regression.
+
+In R, binomial data can be in three formats: binary, Wilkinson&ndash;Rogers, or weighted. Coefficient produced are the same, but the degrees of freedom and deviance will differ. Binary format will yield the most degrees of freedom because dataset is in long format. The W&ndash;R and weighted will have degrees of freedom equal to the number of treatments because dataset is in wide format.
+
+If using W&ndash;R format, the LHS of the formula has to be `cbind(fail, pass)`.
+
+## Poisson regression
+
+GLM with Poisson family. The number of events per unit (time, area, etc.). Discrete values, positive values, mean equal to variance. Appropriate if the number of observations is less than 30.
+
+Intro stat courses cover $\chi^2$ test to compare count data. `glmer()` can be used as an alternative. To do this, estimate an intercept for each treatment group. An ANOVA can then be run to determine if the coefficients differ from zero.
+

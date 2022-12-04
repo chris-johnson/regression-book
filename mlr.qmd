@@ -1,0 +1,4 @@
+# Multiple linear regression
+
+Interaction term: `x1 * x2`
+

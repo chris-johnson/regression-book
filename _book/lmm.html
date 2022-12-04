@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.2.269">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Regression with R - 5&nbsp; Linear mixed effects models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1.6em;
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./mem.html" rel="next">
+<link href="./poisson.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Linear mixed effects models</span></h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Regression with R</a> 
+    </div>
+      </div>
+      <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">Preface</a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./likelihood.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Likelihood</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mlr.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Multiple linear regression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./logistic.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Logistic regression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./poisson.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Poisson regression</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./lmm.html" class="sidebar-item-text sidebar-link active"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Linear mixed effects models</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mem.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Mixed effects models</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./r.html" class="sidebar-item-text sidebar-link"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">R</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">References</a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Linear mixed effects models</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<p>TileStats notes: Mixed effects models</p>
+<!-- dependent data points
+
+same individual appears multiple times on independent or predictor variable axis (repeated measures)
+
+-->
+<p>Fixed effect example: population mean (fixed because it doesn’t vary), usually population parameters Random effects: parameters that vary between groups of dependent data points. Example: Measurements on the same individual will have a mean. Each individual will have a unique mean. In other words, each individual has a parameter to be estimated.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>person</th>
+<th>before diet</th>
+<th>after 1 week</th>
+<th>after 2 weeks</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>102</td>
+<td>97</td>
+<td>95</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>96</td>
+<td>93</td>
+<td>87</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>83</td>
+<td>79</td>
+<td>78</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>79</td>
+<td>77</td>
+<td>75</td>
+</tr>
+</tbody>
+</table>
+<p>Regular linear regression would estimate the overall intercept of 89.875 (the mean weight before starting the diet). The estimated slope is -3.125 (the average weight change—in this case loss—per week).</p>
+<p>A hypothesis test of whether the slope is significantly different than zero results in FTR (<span class="math inline">\(p \approx 0.372\)</span>). This is in conflict with the data because each individual reduces their weight over time.</p>
+<p>A linear mixed effects model does determine the slope is significantly different than 0, i.e.&nbsp;rejects <span class="math inline">\(H_0: b_1 = 0\)</span>. One reason the SLR failed as a model is because these four individuals were randomly sampled from the population, and their measurements are far from the fitted values (i.e.&nbsp;large residuals). Additionally, <span class="math inline">\(n = 4\)</span>, which is a small sample size.</p>
+<p>The aim of the study is to assess whether the diet reduces the weights, and not so much about each individual’s weight at the start of the study. So there is variation in body weights between individuals at a given time point, and there is variation between the cases (weight over time for a given individual). The variation in body weights between individuals is irrelevant to the research question; they only want to know if the diet works. To solve this problem, use a LME model. The LME model can estimate the intercept and slope for each individual. The residuals are computed using each individual’s model, not a “global” one like SLR.</p>
+<p>How to interpret configurations:</p>
+<p>Fixed slope, random intercept: All individuals in the population are assumed to have the same slope (i.e.&nbsp;lose weight at a similar rate). The population slope is estimated using the available data (from the four subjects). Each individual has their own intercept to account for their different starting weights (102, 96, 83, 79). A model with random intercepts but fixed slopes would be written as <span class="math inline">\(\text{weight}_i = a_i + b \times \text{weeks}\)</span>, where <span class="math inline">\(i\)</span> indexes the subjects. Note: <span class="math inline">\(a_i\)</span>, the intercept, differs based on <span class="math inline">\(i\)</span>, whereas <span class="math inline">\(b\)</span> (the slope) is fixed.</p>
+<p>The intercepts for each individual are computed and interpreted in the following way:</p>
+<p><span class="math display">\[
+\begin{aligned}
+a_1 &amp;= 89.875 + 11.2 = 101 \\
+a_2 &amp;= 89.875 + 5.2 = 95 \\
+a_3 &amp;= 89.875 - 6.7 = 83 \\
+a_4 &amp;= 89.875 - 9.7 = 80
+\end{aligned}
+\]</span></p>
+<p>where 89.875 comes from the fixed effects model. <span class="math inline">\(\text{weight} = 89.875 - 3.125 \text{weeks}\)</span>.</p>
+<p>89.875 is the global intercept (not considering individuals) so each random effect (individual intercept) can be thought of as a deviation from it (<span class="math inline">\(89.875 \pm \text{some number}\)</span>): 11.2, 5.2, -6.7, and -9.7 aer random effects.</p>
+<p><strong>Special note</strong>: The mean of the estimated intercepts (101, 95, 83, 80) is equal to the estimated overall intercept (89.875).</p>
+<p><span class="math inline">\(\text{weight}_1 = 101 - 3.125\text{weeks}\)</span> <span class="math inline">\(\text{weight}_2 = 95 - 3.125\text{weeks}\)</span> <span class="math inline">\(\text{weight}_1 = 89.875 - 3.125\text{weeks}\)</span> (global) <span class="math inline">\(\text{weight}_1 = 83 - 3.125\text{weeks}\)</span> <span class="math inline">\(\text{weight}_1 = 80 - 3.125\text{weeks}\)</span></p>
+<p>These equations allow the “individual regression lines” to be drawn. (The “global” line can be plotted too.)</p>
+<p>Each individual’s data points have their own line, so residuals are smaller, resulting in lower standard errors, and in turn a smaller p-value.</p>
+<p>SSR for SLR: 896.0 SSR for LME: 11.9</p>
+<p><span class="math display">\[
+\begin{aligned}
+weight_1 &amp;= 101 - 3.125 \times \text{weeks} \\
+weight_2 &amp;= 95 - 3.125 \times \text{weeks} \\
+weight &amp;= 89.875 - 3.125 \times \text{weeks} \\
+weight_3 &amp;= 83 - 3.125 \times \text{weeks} \\
+weight_4 &amp;= 80 - 3.125 \times \text{weeks}
+\end{aligned}
+\]</span></p>
+<p>These equations allow the “individual regression lines” to be drawn. (The “global” line can be plotted too.)</p>
+<p>Each individual’s data points have their own line, so residuals are smaller, resulting in lower standard errors, and in turn a smaller p-value.</p>
+<p>SSR for SLR: 896.0 SSR for LME: 11.9</p>
+<p>In other words, the variance around the lines from the LME model is much smaller than the variance of the SLR model.</p>
+<p><strong>Important</strong>: To further clarify “random”, the differences (11.2, 5.2, -6.7, -9.7) from the overall intercept can be thought of as a random variable with mean = 0 and variance estimated by the model.</p>
+<p><span class="math display">\[\frac{11.2 + 5.2 + (-6.7) + (-9.7)}{4} = 0\]</span></p>
+<p>We assume a random sample of subjects (in our case <span class="math inline">\(n = 4\)</span>, but imagine <span class="math inline">\(n \gg 4\)</span>) would have weights that follow a Normal distribution (<code>family = "gaussian"</code>) though counts would follow a Poisson distribution, etc.</p>
+<hr>
+<p>How LME model differs from MLR where subject is a factor:</p>
+<p>LME: Subjects as a random factor MLR: Subjects as a factor</p>
+<p>MLR: <code>weight = b_0 + b_1 \times weeks + b_j \times subject</code> LME: <code>weight = b_0 + b_1 \times weeks + (1 | subject)</code></p>
+<p>In MLR, subject is a fixed effect, so this framework would compare these four individuals only (i.e.&nbsp;the subjects are <em>not</em> a random sample from the population).</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>LM</th>
+<th>LMM</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Intercept</td>
+<td>101.125</td>
+<td>89.875</td>
+</tr>
+<tr class="even">
+<td>Weeks</td>
+<td>-3.125</td>
+<td>-3.125</td>
+</tr>
+<tr class="odd">
+<td>Subject 1</td>
+<td></td>
+<td>11.174</td>
+</tr>
+<tr class="even">
+<td>Subject 2</td>
+<td>-6.0</td>
+<td>5.215</td>
+</tr>
+<tr class="odd">
+<td>Subject 3</td>
+<td>-18.0</td>
+<td>-6.705</td>
+</tr>
+<tr class="even">
+<td>Subject 4</td>
+<td>-21.0</td>
+<td>-9.685</td>
+</tr>
+</tbody>
+</table>
+<p>Both models have same slope. In LM, the intercept is the baseline category (in this case, Subject 1). In LMM, the intercept is the <em>overall intercept</em>. So in LM, interpretation of the coefficients—-6.0, -18.0, and -21.0—is relative to Subject 1.</p>
+<p>This weight dataset, paired with the research question, violates the assumption of independence required by MLR. Each individual is measured over time, and those measurements are dependent.</p>
+<hr>
+<p>LME model vs.&nbsp;repeated measures ANOVA</p>
+<p>LME model pros:</p>
+<ul>
+<li>can estimate parameters</li>
+<li>can work even when data is missing</li>
+<li>doesn’t require the dependent variable to be continuous; works fine with binary outcomes or count data</li>
+<li>independent variable can be on continuous scale
+<ul>
+<li>measurement of each subject doesn’t have to occur on a fixed, constant schedule; they can be measured at any time</li>
+</ul></li>
+</ul>
+<p>RM ANOVA cons:</p>
+<ul>
+<li>removes <em>all</em> data points for an individual if one or more data points are missing, resulting in a reduced sample size which in turn decreases statistical power</li>
+<li>dependent variable <em>must be</em> continuous</li>
+<li>the repeated measures must be categorical (all observations across subjects must line up, e.g.&nbsp;everyone has a <span class="math inline">\(t = 1\)</span> measurement, a <span class="math inline">\(t = 2\)</span> measurement, etc.)</li>
+</ul>
+<p>Let’s consider a different dataset:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Person</th>
+<th>Diet</th>
+<th>Before</th>
+<th>Week 1</th>
+<th>Week 2</th>
+<th>Week 3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>A</td>
+<td>102</td>
+<td>97</td>
+<td>95</td>
+<td>93</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>A</td>
+<td>96</td>
+<td>93</td>
+<td>87</td>
+<td>85</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>B</td>
+<td>83</td>
+<td>79</td>
+<td>78</td>
+<td>74</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>B</td>
+<td>79</td>
+<td>77</td>
+<td>75</td>
+<td>72</td>
+</tr>
+</tbody>
+</table>
+<p>Random intercepts model: <code>weight ~ weeks + (1 | subjects)</code></p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Intercept</th>
+<th>Slope</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Overall</td>
+<td>89.775</td>
+<td>-2.975</td>
+<td>fixed effects</td>
+</tr>
+<tr class="even">
+<td>Subject 1</td>
+<td>11.391</td>
+<td></td>
+<td>random effect</td>
+</tr>
+<tr class="odd">
+<td>Subject 2</td>
+<td>4.918</td>
+<td></td>
+<td>random effect</td>
+</tr>
+<tr class="even">
+<td>Subject 3</td>
+<td>-6.785</td>
+<td></td>
+<td>random effect</td>
+</tr>
+<tr class="odd">
+<td>Subject 4</td>
+<td>9.524</td>
+<td></td>
+<td>random effect</td>
+</tr>
+</tbody>
+</table>
+<p>Random slopes and intercepts model: <code>weight ~ weeks + (1 + weeks | subjects)</code></p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Intercept</th>
+<th>Slope</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Overall</td>
+<td>89.775</td>
+<td>-2.975</td>
+</tr>
+<tr class="even">
+<td>Subject 1</td>
+<td>11.910</td>
+<td>-0.333</td>
+</tr>
+<tr class="odd">
+<td>Subject 2</td>
+<td>5.429</td>
+<td>-0.319</td>
+</tr>
+<tr class="even">
+<td>Subject 3</td>
+<td>-7.160</td>
+<td>0.249</td>
+</tr>
+<tr class="odd">
+<td>Subject 4</td>
+<td>-10.179</td>
+<td>0.423</td>
+</tr>
+</tbody>
+</table>
+<p>R provides <span class="math inline">\(r = -0.88\)</span> which is the correlation for the random slopes and intercepts. Higher initial weights are correlated with more negative slopes (i.e.&nbsp;weight loss).</p>
+<p>This checks out with reality as it is easier for fatter people to lose weight than people who are less fat.</p>
+<p>Random slopes only: <code>weight ~ weeks + (0 + weeks | subject)</code></p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Intercept</th>
+<th>Slope</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Overall</td>
+<td>89.775</td>
+<td>-2.975</td>
+</tr>
+<tr class="even">
+<td>Subject 1</td>
+<td></td>
+<td>3.816</td>
+</tr>
+<tr class="odd">
+<td>Subject 2</td>
+<td></td>
+<td>1.382</td>
+</tr>
+<tr class="even">
+<td>Subject 3</td>
+<td></td>
+<td>-2.212</td>
+</tr>
+<tr class="odd">
+<td>Subject 4</td>
+<td></td>
+<td>-2.986</td>
+</tr>
+</tbody>
+</table>
+<p><em>Important note</em>: The fixed-intercept-random-slope model is usually only appropriate for modeling changes. Initially, all observations (e.g.&nbsp;subjects) have a change of 0, so share an intercept. The changes over time would be <span class="math inline">\(t_1 - t_0\)</span>, <span class="math inline">\(t_2 - t_1\)</span>, etc.</p>
+<p>Additional fixed effect: <code>weight ~ weeks + diet + (1 | subjects)</code></p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Term</th>
+<th>Estimate</th>
+<th>p-value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Intercept</td>
+<td>97.962</td>
+<td>&lt; 0.001</td>
+</tr>
+<tr class="even">
+<td>Diet B</td>
+<td>-16.375</td>
+<td>0.003</td>
+</tr>
+<tr class="odd">
+<td>slope</td>
+<td>-2.975</td>
+<td>&lt; 0.001</td>
+</tr>
+<tr class="even">
+<td>Subject 1</td>
+<td>3.095</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Subject 2</td>
+<td>-3.095</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Subject 3</td>
+<td>1.309</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Subject 4</td>
+<td>-1.309</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Factors become intercepts; non-factors become slopes.</p>
+<p>Diet is a factor: A or B. Week is not a factor: 0, 1, 2, or 3 (continuous?)</p>
+<p>Therefore, “Intercept” is the intercept for Diet A (the reference category, 97.962), whereas Diet B is the delta between Diet B and Diet A (in this case <span class="math inline">\(97.962 \, \text{kg} - 16.372 \, \text{kg} \approx 81 \, \text{kg}\)</span>.</p>
+<p>Subject 1—a Diet A member—has an intercept that is <span class="math inline">\(97.962 + 3.095\)</span> (the intercept for their subject-specific “line”). To get the intercept for Subject 3 (a Diet B member), start at 97.962, subtract 16.375 to get to Diet B’s overall intercept, then add 1.309 to adjust for Subject 3 (<span class="math inline">\(97.962 - 16.375 + 1.309 \approx 82.896\)</span>).</p>
+<p>The p-value for Diet B subjects (<span class="math inline">\(p = 0.003\)</span>) means that Diet B is significantly different than Diet A. Because the estimate for Diet B is -16.375 (or in general, negative), Diet B subjects weigh less than Diet A subjects.</p>
+<!-- Question
+
+What does "< 0.001" for the intercept mean? Significantly different from... what?
+
+-->
+
+
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./poisson.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Poisson regression</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./mem.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Mixed effects models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+</body></html>

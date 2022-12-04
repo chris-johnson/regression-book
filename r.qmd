@@ -1,0 +1,5 @@
+# R
+
+`y ~ x` is a shortcut for `y ~ x + 1`.
+
+`summary()`, `plot()`

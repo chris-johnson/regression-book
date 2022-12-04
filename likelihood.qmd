@@ -1,0 +1,53 @@
+# Likelihood
+
+Probability function vs. likelihood function
+
+Same function, but different knowns and unknowns.
+
+Let $X$ be a random variable, and $x$ be an observed set from $X$. Similarly, let $\theta$ be a parameter set.
+
+Consider the Binomial probability function which generates a probability provided the number of trials, the probability of observing a 1, and the number of successes.
+
+For probability, $n$ and $p$ are known, and $k$ is unknown. $k \in \{0, 1, \ldots..., n\}$. Plugging in all values of $k$ generates a probability distribution.
+
+$$
+\Pr(X = k) = \binom{8}{k} 0.5^k (1 - 0.5)^{8 - k} 
+$$
+
+The interpretation for this distribution is the probability for the number of 1s (successes) given we observed $k$ ($k = 1$, $k = 2$, etc.).
+
+We see the probability function is a function of $k$&mdash;what's observed (generally $X = x$, but commonly $X = k$ for Binomial).
+
+For likelihood, $n$ and $k$ are known, and $p$ is unknown. Recall $p$ is the probability of success, and $p \in \{0, 1\}$. This situation is now the following: We did an experiment: $n$ trials, and we observed a single value of $k$ (the number of successess that occurred during the $n$ trials).
+
+The likelihood function is a function of $p$; the RHS of the function is the same as the probability function:
+
+$$
+\mathrm{L}(p) = \binom{8}{4} p^4 (1 - p)^{8 - 4}
+$$
+
+For the Binomial distribution, the probability function is discrete whereas the likelihood function is continuous. In fact, the likelihood function is always continuous. It is $\mathrm{L}(p)$ (likelihood) vs. $p$.
+
+Likelihood: What's the likelihood that the parameter is $\theta$?
+Probability: What's the probability the event $X = x$ occurs?
+
+Likelihood: You've observed data, determined a candidate distribution, and want to determine the parameter value that is most likely (i.e. maximizes the likelihood).
+
+Note:
+
+$$
+\begin{aligned}
+\Pr(X = 4) &= \binom{8}{4} 0.5^4 (1 - 0.5)^{8 - 4} \\
+\mathrm{L}(p = 0.5) &= \binom{8}{4} 0.5^4 (1 - 0.5)^{8 - 4}
+\end{aligned}
+$$
+
+Probability: You've observed data, and have determined a candidate distribution and determined a set of parameter values (possibly by likelihood, maximum likelihood, etc.), and want to determine how probable an event is.
+
+Likelihood: distribution parameter
+Probability: event
+
+Maximum likelihood estimator (MLE)
+
+
+

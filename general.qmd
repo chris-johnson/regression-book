@@ -1,0 +1,61 @@
+# Regression general
+
+If the confidence interval for a model term includes 0, it is not statistically significant.
+
+<!-- Outstanding questions 
+
+Interaction terms vs. random effects: Are interaction terms a solution for MLR while REs are a feature of GLM? I think interaction terms allow for groups to have different slopes in MLR (maybe independent?) whereas random effect slopes accomplishes the same thing (maybe dependent?). IDK. 
+
+-->
+
+<!-- IDK how to interpret these notes
+
+"Define what is independent and what is dependent."
+"Choose treatment vs. control model or ANOVA-esque model"
+
+
+-->
+
+## Facts
+
+Predictor variables can change the estimates for other predictor variables if not independent.
+"When terms are added or dropped, the language 'has been corrected for' is used"
+"Large deviations: qualitative changes to the model and statistical changes to the model; small deviations cause quantitative changes"
+Simpson's Paradox: Excluding important predictors makes the model wrong. Exclusion doesn't have to be on purpose.
+Interactions are for multiple regression when groups have different slopes.
+
+
+## Preprocessing
+
+Scale predictors if they have different units (cm, km)
+Time variable? Rescale so earliest date is 0.
+
+
+## Model specification
+
+Research questions drive model specification. Multiple models may be required.
+
+Intercepts allow modeling of discrete groups.
+
+Let `x` be a factor. `lm(y ~ x)` is the same as `lm(y ~ x + 1)`. If `x` has $k$ levels, then there will be $k - 1$ terms (one level becomes the reference category). `lm(y ~ x - 1)` produces $k$ terms (no reference category), and each a coefficient for every level. In other words, use `- 1` to estimate an intercept for each group.
+
+The only data types supported in modeling frameworks are `factor` and `numeric`. `character` fields are converted to `factor`.
+
+Intercepts for discrete predictors; slopes for continuous predictors.
+
+The first null model is a model that assumes a single intercept can describe all the variability in the data.
+
+## Model analysis
+
+Null model: Intercept-only model (global mean of data) `lm(y ~ 1)`
+
+Coefficients are interpreted w.r.t. the units associated with term, and are expressed in language about their effect on the dependent variable. A one ft. increase in vehicle length results in a Kelly Blue Book value that is $256 dollars less.
+
+The LHS is the expected value. The slope is how the expected value changes because of the predictor. It can increase, decrease, or have no effect on the expected value as the term increases. The intercepts are constant values that are conditionally added based on whether they are "activated".
+
+Examine residuals
+Plot `y ~ x` with $\hat{y}$ superimposed.
+
+## R general
+
+`broom::tidy()` extracts coefficients.

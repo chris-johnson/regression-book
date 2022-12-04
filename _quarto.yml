@@ -1,0 +1,27 @@
+project:
+  type: book
+
+book:
+  title: "Regression with R"
+  author: "Chris Johnson"
+  date: "12/3/2022"
+  chapters:
+    - index.qmd
+    - likelihood.qmd
+    - mlr.qmd
+    - logistic.qmd
+    - poisson.qmd
+    - lmm.qmd
+    - mem.qmd
+    - r.qmd
+    - references.qmd
+bibliography: references.bib
+
+format:
+  html:
+    theme: cosmo
+  pdf:
+    documentclass: scrreprt
+
+
+

@@ -1,0 +1,112 @@
+# Logistic regression
+
+<!-- General knowledge that can go elsewhere 
+
+Categorical variables are converted to binary dummy variables
+
+One category is dropped because it would otherwise result in multicolinearity. The dropped category is the reference category. Choose wisely; it should be the category you care about the most and the one that allows for the easiest interpretation. The options are choosing the norm or a category of unexpected presence (either end of the spectrum).
+
+-->
+
+
+
+## Prerequisite knowledge
+
+The *odds* of an event is a function of probability, defined as
+
+$$
+\frac{p}{(1 - p)}
+$$
+
+where $p$ is the probability of the event occurring, and $1 - p$ is the probability of the event *not* occurring. The ratio of the odds for two events is the *odds ratio* (OR). The odds in the denominator is the *reference event*. *Even odds* occurs when the OR is 1, and means both events are equally likely. A positive OR means the event is more likely to occur, whereas a negative OR means the event is less likely to occur.
+
+## Interpreting coefficients
+
+For categorical variables, the OR compares the odds of the non-reference category to the odds of the reference category, with all other variables held constant.
+
+Lucy Dickinson published an article on Medium titled "How to Interpret the Odds Ratio with Categorical Variables in Logistic Regression". In this article, she fit a logistic regression model to attempt to study the effects of customer type, gender, day type, age category, and day of week on length of bike rides. She defined long bike rides as those being greater than 20 minutes and created a dichotomous response variable based on recorded length of bike rides.
+
+Reference levels were subscribers (`user_type`), males (`gender`), weekdays (`daytype`), over-30s (`under30years`), and Wednesdays (`weekday`).
+
+The results were
+
+predictor              | estimate
+-----------------------|---------
+`const`                | -1.5459
+`user_type_customer`   |  1.6643
+`gender_female`        |  0.3207
+`daytype_Weekend`      |  0.0027
+`under30years_under30` | -0.0780
+`weekday_Friday`       | -0.0041
+`weekday_Monday`       |  0.0551
+`weekday_Saturday`     |  0.0398
+`weekday_Sunday`       | -0.0432
+`weekday_Thursday`     | -0.0647
+`weekday_Tuesday`      | -0.0149
+
+The coefficients are interpreted relative to the reference levels and are natural-log-odds.
+
+The odds of a ride exceeding 20 minutes is 37% higher if you are female ($e^{0.3207} \approx 1.37$). To make this clear, the log-odds ratio of females to males for a long bike ride is
+
+$$
+\ln\left(\frac{\text{odds}_{\text{female}}}{\text{odds}_{\text{male}}}\right) = 0.3207
+$$
+
+So
+
+$$
+\begin{aligned}
+e^{\ln\left(\frac{\text{odds}_{\text{female}}}{\text{odds}_{\text{male}}}\right)} &= e^{0.3207} \\
+\frac{\text{odds}_{\text{female}}}{\text{odds}_{\text{male}}} &\approx \frac{1.37}{1}
+\end{aligned}
+$$
+
+This odds ratio translates to females' odds being 37% higher than the odds of males for taking a long bike ride.
+
+The odds of a ride exceeding 20 minutes is 8% lower if you are under 30 years of age:
+
+$$
+\begin{aligned}
+\ln\left(\frac{\text{odds}_{\text{under 30}}}{\text{odds}_{\text{over 30}}}\right) &= -0.0780 \\
+\frac{\text{odds}_{\text{under 30}}}{\text{odds}_{\text{over 30}}} &= e^{-0.0780} \\
+&\approx \frac{0.92}{1}
+\end{aligned}
+$$
+
+The odds of a ride exceeding 20 minutes are approximately even for weekdays and weekend days: $e^{0.0027} \approx \frac{1.003}{1}$. (Technically, the odds of a long bike ride are 0.3% higher for weekdays, which is in contrast to Lucy's hypothesis that longer bike rides would occur on weekends.)
+
+## Converting odds ratio to probability
+
+To convert the odds ratio to a probability is straightforward:
+
+$$
+\begin{aligned}
+\text{OR} &= \frac{p}{(1 - p)} \\
+\text{OR} \cdot (1 - p) &= p \\
+\text{OR} - \text{OR} \cdot p &= p \\
+\text{OR} &= p + \text{OR} \cdot p \\
+\text{OR} &= p(1 + \text{OR}) \\
+\frac{\text{OR}}{(1 + \text{OR})} &= p
+\end{aligned}
+$$
+
+So to convert the odds ratio to a probability, we use $p = \frac{\text{OR}}{(1 + \text{OR})}$. The probability is still interpreted with respect to the reference level. Recall that
+
+> the odds of a ride exceeding 20 minutes is 8% lower if you are under 30 years of age
+
+was based on $\frac{\text{odds}_{\text{under 30}}}{\text{odds}_{\text{over 30}}} \approx \frac{0.92}{1}$. To put this in terms of probability:
+
+$$
+\begin{aligned}
+p &= \frac{0.92}{1 + 0.92} \\
+&\approx 0.48
+\end{aligned}
+$$
+
+which translates to the probability of a ride exceeding 20 minutes is 48% lower if you are under 30 years of age.
+
+## Logistic regression in R
+
+
+
+<!-- How to specify the reference category in R? -->
